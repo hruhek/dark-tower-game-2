@@ -44,7 +44,7 @@ class Player(BaseModel):
     silver: int = 0
     points: int = 0
     weapon: Weapon | None = None
-    armor: bool = False
+    armor: Armor | None = None
     inventory: list[Item] = []
     scrolls: list[Item] = []
     cloak_charges: int = 0

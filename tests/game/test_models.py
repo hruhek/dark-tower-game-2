@@ -74,7 +74,7 @@ class TestPlayer:
         assert player.silver == 0
         assert player.points == 0
         assert player.weapon is None
-        assert player.armor is False
+        assert player.armor is None
         assert player.inventory == []
         assert player.level_benefits == []
 
@@ -145,6 +145,19 @@ class TestArmor:
     def test_armor_default_absorb(self):
         armor = Armor(name="Armor")
         assert armor.absorb == "d4"
+
+
+class TestPlayerArmor:
+    def test_player_armor_defaults_none(self):
+        player = Player()
+        assert player.armor is None
+
+    def test_player_can_equip_armor(self):
+        player = Player()
+        player.armor = Armor(name="Armor", absorb="d4")
+        assert player.armor is not None
+        assert player.armor.name == "Armor"
+        assert player.armor.absorb == "d4"
 
 
 class TestItemAbsorb:
