@@ -1,5 +1,6 @@
 from dark_fort.game.enums import ItemType, MonsterTier, Phase
 from dark_fort.game.models import (
+    Armor,
     CombatState,
     GameState,
     Item,
@@ -160,3 +161,43 @@ class TestHasRope:
     def test_has_rope_returns_false(self):
         player = Player()
         assert has_rope(player) is False
+
+
+class TestWeaponAttackBonus:
+    def test_weapon_attack_bonus_adds_to_hit_roll(self):
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        player = Player(weapon=Weapon(name="Dagger", damage="d4", attack_bonus=1))
+        combat = CombatState(monster=monster, monster_hp=5)
+        result = resolve_combat_hit(player, combat, player_roll=2)
+        assert any("HIT" in m for m in result.messages)
+
+    def test_weapon_attack_bonus_still_misses_low_roll(self):
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=5, damage="d4", hp=5
+        )
+        player = Player(weapon=Weapon(name="Dagger", damage="d4", attack_bonus=1))
+        combat = CombatState(monster=monster, monster_hp=5)
+        result = resolve_combat_hit(player, combat, player_roll=2)
+        assert any("MISS" in m for m in result.messages)
+
+
+class TestArmorAbsorb:
+    def test_armor_absorbs_damage(self):
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        player = Player(hp=15, armor=Armor(name="Armor", absorb="d4"))
+        combat = CombatState(monster=monster, monster_hp=5)
+        result = resolve_combat_hit(player, combat, player_roll=2)
+        assert any("Armor absorbs" in m for m in result.messages)
+
+    def test_no_armor_no_absorb_message(self):
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        player = Player(hp=15)
+        combat = CombatState(monster=monster, monster_hp=5)
+        result = resolve_combat_hit(player, combat, player_roll=2)
+        assert not any("absorbs" in m for m in result.messages)

@@ -44,14 +44,16 @@ def resolve_combat_hit(
     monster = combat.monster
     messages: list[str] = []
 
-    effective_roll = player_roll + player.attack_bonus
+    weapon_bonus = player.weapon.attack_bonus if player.weapon else 0
+    effective_roll = player_roll + player.attack_bonus + weapon_bonus
 
     if combat.daemon_assist and player.daemon_fights_remaining > 0:
         messages.append("Your daemon attacks alongside you!")
         effective_roll += roll("d4")
 
+    total_bonus = player.attack_bonus + weapon_bonus
     messages.append(
-        f"Rolling to hit... you rolled {player_roll} (+{player.attack_bonus} bonus)"
+        f"Rolling to hit... you rolled {player_roll} (+{total_bonus} bonus)"
     )
 
     if effective_roll >= monster.points:
@@ -84,9 +86,9 @@ def resolve_combat_hit(
         messages.append(f"{monster.name} deals {monster_dmg} damage")
 
         if player.armor:
-            absorbed = roll("d4")
+            absorbed = roll(player.armor.absorb)
             monster_dmg = max(0, monster_dmg - absorbed)
-            messages.append(f"Armor absorbs {absorbed} damage")
+            messages.append(f"{player.armor.name} absorbs {absorbed} damage")
 
         player.hp -= monster_dmg
         messages.append(
