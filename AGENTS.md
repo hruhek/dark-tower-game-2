@@ -3,6 +3,7 @@
 ## Rules
 
 - **NEVER** change `docs/DARK_FORT.md` — canonical game design document.
+- **ALWAYS** run `make test` and `make lint` before committing.
 
 ## Commands
 
