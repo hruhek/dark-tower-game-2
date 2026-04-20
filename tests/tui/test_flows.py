@@ -1,7 +1,7 @@
 from dark_fort.game.enums import MonsterTier, Phase
 from dark_fort.game.models import CombatState, Monster
 from dark_fort.tui.app import DarkFortApp
-from dark_fort.tui.screens import GameOverScreen
+from dark_fort.tui.screens import GameOverScreen, ShopScreen
 
 
 class TestDeathFlow:
@@ -59,3 +59,60 @@ class TestFleeFlow:
             assert pilot.app.engine.state.player.hp < initial_hp
             cmd_bar = pilot.app.screen.query_one("#cmd-explore")
             assert cmd_bar is not None
+
+
+class TestShopFlow:
+    async def test_buy_item_and_leave_shop(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.silver = 20  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            await pilot.press("1")
+            await pilot.pause()
+            assert pilot.app.engine.state.player.silver == 16  # ty: ignore[unresolved-attribute]
+            await pilot.press("l")
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameScreen"
+            assert pilot.app.engine.state.phase == Phase.EXPLORING
+
+    async def test_cannot_buy_without_enough_silver(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.silver = 2  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            initial_silver = pilot.app.engine.state.player.silver  # ty: ignore[unresolved-attribute]
+            await pilot.press("8")
+            await pilot.pause()
+            assert pilot.app.engine.state.player.silver == initial_silver  # ty: ignore[unresolved-attribute]
+
+
+class TestVictoryFlow:
+    async def test_all_benefits_claimed_triggers_victory(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.level_benefits = [1, 2, 3, 4, 5, 6]  # ty: ignore[unresolved-attribute]
+            result = pilot.app.engine.check_victory()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            assert result.phase == Phase.VICTORY
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine, victory=True))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            assert pilot.app.screen.__class__.__name__ == "GameOverScreen"
+            assert pilot.app.screen.victory is True  # ty: ignore[unresolved-attribute]
+
+    async def test_victory_screen_shows_explored_count(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.player.level_benefits = [1, 2, 3, 4, 5, 6]  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.check_victory()  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine, victory=True))  # ty: ignore[unresolved-attribute]
+            await pilot.pause()
+            stats_widgets = list(pilot.app.screen.query(".game-over-stats"))
+            assert len(stats_widgets) == 3
