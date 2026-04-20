@@ -1,6 +1,8 @@
+from textual.widgets import Label
+
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
-from dark_fort.game.models import Player, Weapon
+from dark_fort.game.models import Armor, Player, Weapon
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
@@ -32,6 +34,31 @@ class TestWidgets:
             bar.commands = [Command.ATTACK, Command.FLEE]
             await pilot.pause()
             assert len(bar.commands) == 2
+
+
+class TestStatusBarArmor:
+    async def test_status_bar_shows_armor(self):
+        player = Player(hp=15, max_hp=15, silver=18, points=5)
+        player.weapon = Weapon(name="Sword", damage="d6")
+        player.armor = Armor(name="Armor", absorb="d4")
+
+        async with DarkFortApp().run_test() as pilot:
+            bar = StatusBar(player=player, explored=3)
+            pilot.app.screen.mount(bar)
+            await pilot.pause()
+            armor_label = bar.query_one("#armor", Label)
+            assert "Armor" in str(armor_label.content)
+
+    async def test_status_bar_shows_no_armor(self):
+        player = Player(hp=15, max_hp=15, silver=18, points=5)
+        player.weapon = Weapon(name="Sword", damage="d6")
+
+        async with DarkFortApp().run_test() as pilot:
+            bar = StatusBar(player=player, explored=3)
+            pilot.app.screen.mount(bar)
+            await pilot.pause()
+            armor_label = bar.query_one("#armor", Label)
+            assert "None" in str(armor_label.content)
 
 
 class TestDarkFortApp:

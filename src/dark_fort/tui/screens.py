@@ -116,9 +116,25 @@ class GameScreen(Screen):
         if not player.inventory:
             return ActionResult(messages=["Your inventory is empty."])
 
+        type_prefix = {
+            "weapon": "W",
+            "armor": "A",
+            "potion": "P",
+            "scroll": "S",
+            "rope": "R",
+            "cloak": "C",
+        }
         messages = ["Inventory:"]
         for i, item in enumerate(player.inventory):
-            messages.append(f"  {i + 1}. {item.name}")
+            prefix = type_prefix.get(item.type, "?")
+            stats = ""
+            if item.type == "weapon" and item.damage:
+                stats = f" ({item.damage})"
+            elif item.type == "armor" and item.absorb:
+                stats = f" ({item.absorb})"
+            elif item.type == "potion" and item.damage:
+                stats = f" (heal {item.damage})"
+            messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats}")
         return ActionResult(messages=messages)
 
     def _show_use_item(self) -> ActionResult:
@@ -157,7 +173,17 @@ class ShopScreen(Screen):
         log = self.query_one("#shop-log", LogView)
         log.add_message("Available wares:")
         for i, (item, price) in enumerate(SHOP_ITEMS):
-            log.add_message(f"  {i + 1}. {item.name} — {price}s")
+            stats = ""
+            if item.type == "weapon" and item.damage:
+                stats = f" ({item.damage}"
+                if item.attack_bonus:
+                    stats += f"/+{item.attack_bonus}"
+                stats += ")"
+            elif item.type == "armor" and item.absorb:
+                stats = f" (-{item.absorb})"
+            elif item.type == "potion" and item.damage:
+                stats = f" (heal {item.damage})"
+            log.add_message(f"  {i + 1}. {item.name}{stats} — {price}s")
         log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
         log.add_message("Press a number (1-10) to buy, or L to leave.")
 

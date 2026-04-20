@@ -24,6 +24,7 @@ class StatusBar(Horizontal):
         yield Label(id="points")
         yield Label(id="rooms")
         yield Label(id="weapon")
+        yield Label(id="armor")
 
     def _refresh(self) -> None:
         if not self.player or not self.is_mounted:
@@ -49,11 +50,22 @@ class StatusBar(Horizontal):
         else:
             weapon_label.update("Weapon: Unarmed")
 
+        armor_label = self.query_one("#armor", Label)
+        if self.player.armor:
+            armor_label.update(
+                f"Armor: {self.player.armor.name} ({self.player.armor.absorb})"
+            )
+        else:
+            armor_label.update("Armor: None")
+
     def watch_player(self) -> None:
         self._refresh()
 
     def watch_explored(self) -> None:
         self._refresh()
+
+    def on_mount(self) -> None:
+        self.call_after_refresh(self._refresh)
 
 
 class LogView(RichLog):
