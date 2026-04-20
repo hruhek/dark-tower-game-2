@@ -1,0 +1,135 @@
+import pytest
+from pydantic import ValidationError
+
+from dark_fort.game.enums import ItemType, MonsterTier, Phase
+from dark_fort.game.models import (
+    ActionResult,
+    CombatState,
+    GameState,
+    Item,
+    Monster,
+    Player,
+    Room,
+    Weapon,
+)
+
+
+class TestWeapon:
+    def test_create_weapon(self):
+        weapon = Weapon(name="Warhammer", damage="d6")
+        assert weapon.name == "Warhammer"
+        assert weapon.damage == "d6"
+        assert weapon.attack_bonus == 0
+
+    def test_weapon_with_attack_bonus(self):
+        weapon = Weapon(name="Sword", damage="d6", attack_bonus=1)
+        assert weapon.attack_bonus == 1
+
+
+class TestItem:
+    def test_create_potion(self):
+        item = Item(name="Potion", type=ItemType.POTION)
+        assert item.type == ItemType.POTION
+        assert item.damage is None
+
+    def test_create_weapon_item(self):
+        item = Item(name="Dagger", type=ItemType.WEAPON, damage="d4", attack_bonus=1)
+        assert item.damage == "d4"
+        assert item.attack_bonus == 1
+
+
+class TestMonster:
+    def test_create_weak_monster(self):
+        monster = Monster(
+            name="Goblin",
+            tier=MonsterTier.WEAK,
+            points=3,
+            damage="d4",
+            hp=5,
+            loot="Rope",
+        )
+        assert monster.tier == MonsterTier.WEAK
+        assert monster.points == 3
+        assert monster.hp == 5
+
+    def test_create_tough_monster_with_special(self):
+        monster = Monster(
+            name="Medusa",
+            tier=MonsterTier.TOUGH,
+            points=4,
+            damage="d6",
+            hp=10,
+            special="petrify_1_in_6",
+        )
+        assert monster.special == "petrify_1_in_6"
+
+
+class TestPlayer:
+    def test_default_player(self):
+        player = Player()
+        assert player.name == "Kargunt"
+        assert player.hp == 15
+        assert player.max_hp == 15
+        assert player.silver == 0
+        assert player.points == 0
+        assert player.weapon is None
+        assert player.armor is False
+        assert player.inventory == []
+        assert player.level_benefits == []
+
+    def test_player_with_starting_silver(self):
+        player = Player(silver=18)
+        assert player.silver == 18
+
+    def test_level_benefits_unique(self):
+        with pytest.raises(ValidationError):
+            Player(level_benefits=[1, 2, 2, 3])
+
+
+class TestRoom:
+    def test_create_room(self):
+        room = Room(id=1, shape="Square", doors=2, result="nothing")
+        assert room.explored is False
+        assert room.connections == []
+
+    def test_explored_room(self):
+        room = Room(id=1, shape="Square", doors=2, result="nothing", explored=True)
+        assert room.explored is True
+
+
+class TestCombatState:
+    def test_create_combat(self):
+        monster = Monster(
+            name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+        )
+        combat = CombatState(monster=monster, monster_hp=5)
+        assert combat.player_turns == 0
+        assert combat.daemon_assist is False
+
+
+class TestGameState:
+    def test_default_game_state(self):
+        state = GameState(phase=Phase.TITLE)
+        assert state.phase == Phase.TITLE
+        assert state.player is not None
+        assert state.current_room is None
+        assert state.rooms == {}
+        assert state.combat is None
+        assert state.level_up_queue is False
+        assert state.log == []
+
+
+class TestActionResult:
+    def test_action_result_with_messages(self):
+        result = ActionResult(messages=["You enter a room.", "A monster appears!"])
+        assert len(result.messages) == 2
+
+    def test_action_result_with_phase_change(self):
+        result = ActionResult(messages=[], phase=Phase.COMBAT)
+        assert result.phase == Phase.COMBAT
+
+    def test_action_result_with_choices(self):
+        from dark_fort.game.enums import Command
+
+        result = ActionResult(messages=[], choices=[Command.ATTACK, Command.FLEE])
+        assert len(result.choices) == 2

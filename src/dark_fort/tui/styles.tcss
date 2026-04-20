@@ -1,0 +1,69 @@
+StatusBar {
+    dock: top;
+    height: 1;
+    background: $surface;
+    color: $text;
+    padding: 0 1;
+}
+
+StatusBar Label {
+    width: auto;
+    margin-right: 2;
+}
+
+LogView {
+    height: 1fr;
+    background: $background;
+    padding: 1;
+}
+
+CommandBar {
+    dock: bottom;
+    height: auto;
+    background: $surface;
+    padding: 0 1;
+}
+
+CommandBar Button {
+    margin: 0 1;
+}
+
+.title-container {
+    align: center middle;
+}
+
+.title-header {
+    color: $warning;
+    text-align: center;
+    text-style: bold;
+}
+
+.title-subtitle {
+    color: $text-muted;
+    text-align: center;
+}
+
+.title-footer {
+    color: $text-muted;
+    text-align: center;
+}
+
+.game-over-container {
+    align: center middle;
+}
+
+.game-over-header {
+    color: $error;
+    text-align: center;
+    text-style: bold;
+}
+
+.game-over-stats {
+    color: $text;
+    text-align: center;
+}
+
+.game-over-footer {
+    color: $text-muted;
+    text-align: center;
+}
