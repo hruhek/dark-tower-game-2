@@ -24,7 +24,7 @@ def generate_starting_equipment() -> tuple[Weapon, Item]:
     weapon = WEAPONS_TABLE[weapon_idx]
 
     item_table = [
-        Item(name="Armor", type=ItemType.ARMOR),
+        Item(name="Armor", type=ItemType.ARMOR, absorb="d4"),
         Item(name="Potion", type=ItemType.POTION, damage="d6"),
         Item(name="Scroll: Summon weak daemon", type=ItemType.SCROLL),
         Item(name="Cloak of invisibility", type=ItemType.CLOAK),

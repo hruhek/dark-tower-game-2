@@ -183,6 +183,13 @@ class TestWeaponAttackBonus:
         assert any("MISS" in m for m in result.messages)
 
 
+class TestStartingEquipmentArmor:
+    def test_starting_armor_item_has_absorb(self):
+        weapon, item = generate_starting_equipment()
+        if item.type == ItemType.ARMOR:
+            assert item.absorb == "d4"
+
+
 class TestArmorAbsorb:
     def test_armor_absorbs_damage(self):
         monster = Monster(
