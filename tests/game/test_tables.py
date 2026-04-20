@@ -1,5 +1,6 @@
-from dark_fort.game.enums import MonsterTier
+from dark_fort.game.enums import ItemType, MonsterTier
 from dark_fort.game.tables import (
+    ARMOR_TABLE,
     ENTRANCE_RESULTS,
     ITEMS_TABLE,
     LEVEL_BENEFITS,
@@ -101,3 +102,24 @@ class TestWeaponsTable:
 class TestLevelBenefits:
     def test_six_benefits(self):
         assert len(LEVEL_BENEFITS) == 6
+
+
+class TestArmorTable:
+    def test_armor_table_has_entries(self):
+        assert len(ARMOR_TABLE) >= 1
+
+    def test_armor_table_first_entry(self):
+        armor = ARMOR_TABLE[0]
+        assert armor.name == "Armor"
+        assert armor.absorb == "d4"
+
+
+class TestShopItemsArmor:
+    def test_armor_shop_item_has_absorb(self):
+        armor_items = [
+            (item, price) for item, price in SHOP_ITEMS if item.type == ItemType.ARMOR
+        ]
+        assert len(armor_items) >= 1
+        armor_item, price = armor_items[0]
+        assert armor_item.absorb == "d4"
+        assert price == 10

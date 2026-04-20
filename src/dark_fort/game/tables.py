@@ -1,5 +1,5 @@
 from dark_fort.game.enums import ItemType, MonsterTier, ScrollType
-from dark_fort.game.models import Item, Monster, Weapon
+from dark_fort.game.models import Armor, Item, Monster, Weapon
 
 # ---------------------------------------------------------------------------
 # Monster tables
@@ -92,7 +92,7 @@ SHOP_ITEMS: list[tuple[Item, int]] = [
     (Item(name="Sword", type=ItemType.WEAPON, damage="d6", attack_bonus=1), 12),
     (Item(name="Flail", type=ItemType.WEAPON, damage="d6+1"), 15),
     (Item(name="Mighty Zweihänder", type=ItemType.WEAPON, damage="d6+2"), 25),
-    (Item(name="Armor", type=ItemType.ARMOR), 10),
+    (Item(name="Armor", type=ItemType.ARMOR, absorb="d4"), 10),
     (Item(name="Cloak of invisibility", type=ItemType.CLOAK), 15),
 ]
 
@@ -175,6 +175,14 @@ WEAPONS_TABLE: list[Weapon] = [
     Weapon(name="Dagger", damage="d4", attack_bonus=1),
     Weapon(name="Sword", damage="d6", attack_bonus=1),
     Weapon(name="Flail", damage="d6+1"),
+]
+
+# ---------------------------------------------------------------------------
+# Armor table
+# ---------------------------------------------------------------------------
+
+ARMOR_TABLE: list[Armor] = [
+    Armor(name="Armor", absorb="d4"),
 ]
 
 # ---------------------------------------------------------------------------
