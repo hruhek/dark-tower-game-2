@@ -8,7 +8,7 @@ from dark_fort.game.models import Player
 
 
 class StatusBar(Horizontal):
-    """Displays player stats: HP, Silver, Points, Rooms, Weapon."""
+    """Displays player stats: HP, Silver, Points, Rooms, Weapon, Armor."""
 
     player: reactive[Player | None] = reactive(None)
     explored: reactive[int] = reactive(0)

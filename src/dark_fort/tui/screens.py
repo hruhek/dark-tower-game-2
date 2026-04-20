@@ -7,6 +7,7 @@ from textual.widgets import Button, Header, Static
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Command
 from dark_fort.game.models import ActionResult
+from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
 if TYPE_CHECKING:
@@ -202,6 +203,8 @@ class ShopScreen(Screen):
     def on_key(self, event) -> None:
         if event.character and event.character.isdigit():
             index = int(event.character) - 1
+            if index < 0 or index >= len(SHOP_ITEMS):
+                return
             result = self.engine.buy_item(index)
             log = self.query_one("#shop-log", LogView)
             for msg in result.messages:

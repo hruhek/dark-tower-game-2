@@ -10,6 +10,7 @@ class TestDeathFlow:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.player.hp = 1  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.armor = None  # ty: ignore[unresolved-attribute]
             monster = Monster(
                 name="Goblin", tier=MonsterTier.WEAK, points=10, damage="d4", hp=100
             )
