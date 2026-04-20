@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase
 
@@ -45,11 +45,11 @@ class Player(BaseModel):
     points: int = 0
     weapon: Weapon | None = None
     armor: Armor | None = None
-    inventory: list[Item] = []
-    scrolls: list[Item] = []
+    inventory: list[Item] = Field(default_factory=list)
+    scrolls: list[Item] = Field(default_factory=list)
     cloak_charges: int = 0
     attack_bonus: int = 0
-    level_benefits: list[int] = []
+    level_benefits: list[int] = Field(default_factory=list)
     daemon_fights_remaining: int = 0
 
     @field_validator("level_benefits")
@@ -83,7 +83,7 @@ class Room(BaseModel):
     doors: int
     result: str
     explored: bool = False
-    connections: list[int] = []
+    connections: list[int] = Field(default_factory=list)
 
 
 class CombatState(BaseModel):
@@ -94,17 +94,17 @@ class CombatState(BaseModel):
 
 
 class GameState(BaseModel):
-    player: Player = Player()
+    player: Player = Field(default_factory=Player)
     current_room: Room | None = None
-    rooms: dict[int, Room] = {}
+    rooms: dict[int, Room] = Field(default_factory=dict)
     phase: Phase
     combat: CombatState | None = None
     level_up_queue: bool = False
-    log: list[str] = []
+    log: list[str] = Field(default_factory=list)
 
 
 class ActionResult(BaseModel):
     messages: list[str]
     phase: Phase | None = None
-    choices: list[Command] = []
-    state_delta: dict[str, Any] = {}
+    choices: list[Command] = Field(default_factory=list)
+    state_delta: dict[str, Any] = Field(default_factory=dict)
