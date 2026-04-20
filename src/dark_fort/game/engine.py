@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from dark_fort.game.dice import roll
 from dark_fort.game.enums import Phase
-from dark_fort.game.models import ActionResult, GameState, Item, Room, Weapon
+from dark_fort.game.models import (
+    ActionResult,
+    Armor,
+    GameState,
+    Item,
+    Room,
+    Weapon,
+    armor_to_item,
+    weapon_to_item,
+)
 from dark_fort.game.rules import (
     apply_level_benefit,
     check_level_up,
@@ -40,7 +49,7 @@ class GameEngine:
         self.state.player.silver = roll("d6") + 15
 
         if item.type == "armor":
-            self.state.player.armor = True
+            self.state.player.armor = Armor(name=item.name, absorb=item.absorb or "d4")
         elif item.type == "potion" or item.type == "scroll":
             self.state.player.inventory.append(item)
         elif item.type == "cloak":
@@ -138,7 +147,7 @@ class GameEngine:
         self.state.player.silver -= price
 
         if item.type == "armor":
-            self.state.player.armor = True
+            self.state.player.armor = Armor(name=item.name, absorb=item.absorb or "d4")
             msg = f"You buy {item.name} for {price}s."
         elif item.type == "cloak":
             self.state.player.cloak_charges = roll("d4")
@@ -185,10 +194,28 @@ class GameEngine:
             self.state.player.inventory.pop(index)
 
         elif item.type == "weapon":
+            if self.state.player.weapon is not None:
+                self.state.player.inventory.append(
+                    weapon_to_item(self.state.player.weapon)
+                )
+                messages.append(f"{self.state.player.weapon.name} moved to inventory.")
             self.state.player.weapon = Weapon(
                 name=item.name,
                 damage=item.damage or "d4",
                 attack_bonus=item.attack_bonus,
+            )
+            messages.append(f"You equip the {item.name}.")
+            self.state.player.inventory.pop(index)
+
+        elif item.type == "armor":
+            if self.state.player.armor is not None:
+                self.state.player.inventory.append(
+                    armor_to_item(self.state.player.armor)
+                )
+                messages.append(f"{self.state.player.armor.name} moved to inventory.")
+            self.state.player.armor = Armor(
+                name=item.name,
+                absorb=item.absorb or "d4",
             )
             messages.append(f"You equip the {item.name}.")
             self.state.player.inventory.pop(index)

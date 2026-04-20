@@ -1,5 +1,6 @@
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import Phase
+from dark_fort.game.enums import ItemType, Phase
+from dark_fort.game.models import Armor, Item
 
 
 class TestGameEngine:
@@ -65,3 +66,82 @@ class TestGameEngine:
         engine.state.player.level_benefits = [1, 2, 3, 4, 5, 6]
         engine.check_victory()
         assert engine.state.phase == Phase.VICTORY
+
+
+class TestEquipWeapon:
+    def test_equip_weapon_from_inventory(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(
+            Item(name="Test Sword", type=ItemType.WEAPON, damage="d6", attack_bonus=1)
+        )
+        engine.use_item(0)
+        assert engine.state.player.weapon is not None
+        assert engine.state.player.weapon.name == "Test Sword"
+        assert all(item.name != "Test Sword" for item in engine.state.player.inventory)
+
+    def test_equip_weapon_swaps_old_to_inventory(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        old_weapon = engine.state.player.weapon
+        assert old_weapon is not None
+        engine.state.player.inventory.append(
+            Item(name="Sword", type=ItemType.WEAPON, damage="d6", attack_bonus=1)
+        )
+        engine.use_item(0)
+        assert engine.state.player.weapon is not None
+        assert engine.state.player.weapon.name == "Sword"
+        assert any(
+            item.name == old_weapon.name for item in engine.state.player.inventory
+        )
+
+    def test_equip_weapon_when_none_equipped(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.weapon = None
+        engine.state.player.inventory.append(
+            Item(name="Dagger", type=ItemType.WEAPON, damage="d4", attack_bonus=1)
+        )
+        engine.use_item(0)
+        assert engine.state.player.weapon is not None
+        assert engine.state.player.weapon.name == "Dagger"
+
+
+class TestEquipArmor:
+    def test_equip_armor_from_inventory(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(
+            Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
+        )
+        engine.use_item(0)
+        assert engine.state.player.armor is not None
+        assert engine.state.player.armor.name == "Armor"
+
+    def test_equip_armor_swaps_old_to_inventory(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.armor = Armor(name="Old Armor", absorb="d4")
+        engine.state.player.inventory.append(
+            Item(name="New Armor", type=ItemType.ARMOR, absorb="d6")
+        )
+        engine.use_item(0)
+        assert engine.state.player.armor.name == "New Armor"
+        assert any(item.name == "Old Armor" for item in engine.state.player.inventory)
+
+    def test_equip_armor_when_none_equipped(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.armor = None
+        engine.state.player.inventory.append(
+            Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
+        )
+        engine.use_item(0)
+        assert engine.state.player.armor is not None
+        assert engine.state.player.armor.name == "Armor"
