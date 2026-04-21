@@ -45,9 +45,9 @@ class ScrollType(StrEnum):
 
 
 class RoomEvent(StrEnum):
-    EMPTY = "Nothing. Explored."
-    PIT_TRAP = "Pit trap"
-    SOOTHSAYER = "Riddling Soothsayer"
-    WEAK_MONSTER = "Weak monster"
-    TOUGH_MONSTER = "Tough monster"
-    SHOP = "Void Peddler"
+    EMPTY = auto()
+    PIT_TRAP = auto()
+    SOOTHSAYER = auto()
+    WEAK_MONSTER = auto()
+    TOUGH_MONSTER = auto()
+    SHOP = auto()
