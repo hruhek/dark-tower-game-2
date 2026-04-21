@@ -87,7 +87,6 @@ class GameEngine:
 
         room_result_idx = roll("d6") - 1
         room_result = ROOM_RESULTS[room_result_idx]
-        messages.append(room_result)
 
         result = resolve_room_event(self.state, room_result)
         messages.extend(result.messages)
