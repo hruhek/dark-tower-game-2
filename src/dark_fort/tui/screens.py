@@ -5,8 +5,9 @@ from textual.screen import Screen
 from textual.widgets import Button, Header, Static
 
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import Command, ItemType, Phase
+from dark_fort.game.enums import Command, Phase
 from dark_fort.game.models import ActionResult
+from dark_fort.game.phase_states import PHASE_STATES
 from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
@@ -63,14 +64,8 @@ class GameScreen(Screen):
 
     def _update_commands(self) -> None:
         phase = self.engine.state.phase
-        commands: list[Command] = []
-
-        if phase == Phase.COMBAT:
-            commands = [Command.ATTACK, Command.FLEE, Command.USE_ITEM]
-        elif phase == Phase.EXPLORING:
-            commands = [Command.EXPLORE, Command.INVENTORY]
-        elif phase == Phase.SHOP:
-            commands = [Command.BROWSE, Command.LEAVE]
+        state = PHASE_STATES.get(phase)
+        commands = state.available_commands if state else []
 
         cmd_bar = self.query_one("#commands", CommandBar)
         cmd_bar.commands = commands
@@ -98,43 +93,11 @@ class GameScreen(Screen):
             self._update_commands()
 
     def _handle_command(self, action: str) -> ActionResult | None:
-        if action == "attack":
-            return self.engine.attack()
-        elif action == "flee":
-            return self.engine.flee()
-        elif action == "explore":
-            return self.engine.enter_new_room()
-        elif action == "inventory":
-            return self._show_inventory()
-        elif action == "leave":
-            return self.engine.leave_shop()
-        elif action == "use_item":
-            return self._show_use_item()
+        phase = self.engine.state.phase
+        state = PHASE_STATES.get(phase)
+        if state:
+            return state.handle_command(self.engine, action)
         return None
-
-    def _show_inventory(self) -> ActionResult:
-        player = self.engine.state.player
-        if not player.inventory:
-            return ActionResult(messages=["Your inventory is empty."])
-
-        messages = ["Inventory:"]
-        type_prefixes = {
-            ItemType.WEAPON: "W",
-            ItemType.ARMOR: "A",
-            ItemType.POTION: "P",
-            ItemType.SCROLL: "S",
-            ItemType.ROPE: "R",
-            ItemType.CLOAK: "C",
-        }
-        for i, item in enumerate(player.inventory):
-            prefix = type_prefixes.get(item.type, "?")
-            stats = item.display_stats()
-            stats_str = f" ({stats})" if stats else ""
-            messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats_str}")
-        return ActionResult(messages=messages)
-
-    def _show_use_item(self) -> ActionResult:
-        return ActionResult(messages=["Use item: (type item number)"])
 
     def _handle_phase_change(self, result: ActionResult) -> None:
         if result.phase == Phase.GAME_OVER:
