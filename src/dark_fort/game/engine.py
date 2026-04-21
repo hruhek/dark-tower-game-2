@@ -196,52 +196,57 @@ class GameEngine:
         item = self.state.player.inventory[index]
         messages: list[str] = []
 
-        if item.type == "potion":
-            heal = roll(item.damage or "d6")
-            self.state.player.hp = min(
-                self.state.player.hp + heal, self.state.player.max_hp
-            )
-            messages.append(f"You drink the potion and heal {heal} HP.")
-            self.state.player.inventory.pop(index)
-
-        elif item.type == "scroll":
-            messages.append(f"You unroll the {item.name}...")
-            self.state.player.inventory.pop(index)
-
-        elif item.type == "weapon":
-            if self.state.player.weapon is not None:
-                self.state.player.inventory.append(
-                    weapon_to_item(self.state.player.weapon)
+        match item.type:
+            case ItemType.POTION:
+                heal = roll(item.damage or "d6")
+                self.state.player.hp = min(
+                    self.state.player.hp + heal, self.state.player.max_hp
                 )
-                messages.append(f"{self.state.player.weapon.name} moved to inventory.")
-            self.state.player.weapon = Weapon(
-                name=item.name,
-                damage=item.damage or "d4",
-                attack_bonus=item.attack_bonus,
-            )
-            messages.append(f"You equip the {item.name}.")
-            self.state.player.inventory.pop(index)
+                messages.append(f"You drink the potion and heal {heal} HP.")
+                self.state.player.inventory.pop(index)
 
-        elif item.type == "armor":
-            if self.state.player.armor is not None:
-                self.state.player.inventory.append(
-                    armor_to_item(self.state.player.armor)
+            case ItemType.SCROLL:
+                messages.append(f"You unroll the {item.name}...")
+                self.state.player.inventory.pop(index)
+
+            case ItemType.WEAPON:
+                if self.state.player.weapon is not None:
+                    self.state.player.inventory.append(
+                        weapon_to_item(self.state.player.weapon)
+                    )
+                    messages.append(
+                        f"{self.state.player.weapon.name} moved to inventory."
+                    )
+                self.state.player.weapon = Weapon(
+                    name=item.name,
+                    damage=item.damage or "d4",
+                    attack_bonus=item.attack_bonus,
                 )
-                messages.append(f"{self.state.player.armor.name} moved to inventory.")
-            self.state.player.armor = Armor(
-                name=item.name,
-                absorb=item.absorb or "d4",
-            )
-            messages.append(f"You equip the {item.name}.")
-            self.state.player.inventory.pop(index)
+                messages.append(f"You equip the {item.name}.")
+                self.state.player.inventory.pop(index)
 
-        elif item.type == "cloak":
-            self.state.player.cloak_charges = max(
-                0, self.state.player.cloak_charges - 1
-            )
-            messages.append(
-                f"Cloak activated. {self.state.player.cloak_charges} charges remaining."
-            )
+            case ItemType.ARMOR:
+                if self.state.player.armor is not None:
+                    self.state.player.inventory.append(
+                        armor_to_item(self.state.player.armor)
+                    )
+                    messages.append(
+                        f"{self.state.player.armor.name} moved to inventory."
+                    )
+                self.state.player.armor = Armor(
+                    name=item.name,
+                    absorb=item.absorb or "d4",
+                )
+                messages.append(f"You equip the {item.name}.")
+                self.state.player.inventory.pop(index)
+
+            case ItemType.CLOAK:
+                self.state.player.cloak_charges = max(
+                    0, self.state.player.cloak_charges - 1
+                )
+                messages.append(
+                    f"Cloak activated. {self.state.player.cloak_charges} charges remaining."
+                )
 
         return ActionResult(messages=messages)
 
