@@ -4,7 +4,14 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase, ScrollType
+from dark_fort.game.enums import (
+    Command,
+    ItemType,
+    MonsterSpecial,
+    MonsterTier,
+    Phase,
+    ScrollType,
+)
 
 
 class Item(BaseModel):
@@ -53,7 +60,7 @@ class Monster(BaseModel):
     damage: str
     hp: int
     loot: str | None = None
-    special: str | None = None
+    special: MonsterSpecial | None = None
 
 
 class Player(BaseModel):

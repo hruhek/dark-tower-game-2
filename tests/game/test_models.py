@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from dark_fort.game.enums import MonsterTier, Phase, ScrollType
+from dark_fort.game.enums import MonsterSpecial, MonsterTier, Phase, ScrollType
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -62,9 +62,9 @@ class TestMonster:
             points=4,
             damage="d6",
             hp=10,
-            special="petrify_1_in_6",
+            special=MonsterSpecial.PETRIFY,
         )
-        assert monster.special == "petrify_1_in_6"
+        assert monster.special == MonsterSpecial.PETRIFY
 
 
 class TestPlayer:
