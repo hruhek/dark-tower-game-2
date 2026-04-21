@@ -17,34 +17,109 @@ from dark_fort.game.enums import (
 class Item(BaseModel):
     name: str
 
+    def use(self, state: GameState, index: int) -> ActionResult:
+        raise NotImplementedError(f"use() not implemented for {type(self).__name__}")
+
+    def display_stats(self) -> str:
+        return ""
+
 
 class Weapon(Item):
     type: Literal[ItemType.WEAPON] = ItemType.WEAPON
     damage: str
     attack_bonus: int = 0
 
+    def display_stats(self) -> str:
+        stats = self.damage
+        if self.attack_bonus:
+            stats += f"/+{self.attack_bonus}"
+        return stats
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        messages: list[str] = []
+        player = state.player
+        if player.weapon is not None:
+            player.inventory.append(player.weapon)
+            messages.append(f"{player.weapon.name} moved to inventory.")
+        player.weapon = self
+        messages.append(f"You equip the {self.name}.")
+        player.inventory.pop(index)
+        return ActionResult(messages=messages)
+
 
 class Armor(Item):
     type: Literal[ItemType.ARMOR] = ItemType.ARMOR
     absorb: str = "d4"
+
+    def display_stats(self) -> str:
+        return self.absorb
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        messages: list[str] = []
+        player = state.player
+        if player.armor is not None:
+            player.inventory.append(player.armor)
+            messages.append(f"{player.armor.name} moved to inventory.")
+        player.armor = self
+        messages.append(f"You equip the {self.name}.")
+        player.inventory.pop(index)
+        return ActionResult(messages=messages)
 
 
 class Potion(Item):
     type: Literal[ItemType.POTION] = ItemType.POTION
     heal: str
 
+    def display_stats(self) -> str:
+        return f"heal {self.heal}"
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        from dark_fort.game.dice import roll
+
+        messages: list[str] = []
+        player = state.player
+        heal = roll(self.heal)
+        player.hp = min(player.hp + heal, player.max_hp)
+        messages.append(f"You drink the potion and heal {heal} HP.")
+        player.inventory.pop(index)
+        return ActionResult(messages=messages)
+
 
 class Scroll(Item):
     type: Literal[ItemType.SCROLL] = ItemType.SCROLL
     scroll_type: ScrollType
 
+    def display_stats(self) -> str:
+        return ""
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        messages = [f"You unroll the {self.name}..."]
+        state.player.inventory.pop(index)
+        return ActionResult(messages=messages)
+
 
 class Rope(Item):
     type: Literal[ItemType.ROPE] = ItemType.ROPE
 
+    def display_stats(self) -> str:
+        return ""
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        return ActionResult(messages=["You can't use rope directly."])
+
 
 class Cloak(Item):
     type: Literal[ItemType.CLOAK] = ItemType.CLOAK
+
+    def display_stats(self) -> str:
+        return ""
+
+    def use(self, state: GameState, index: int) -> ActionResult:
+        player = state.player
+        player.cloak_charges = max(0, player.cloak_charges - 1)
+        return ActionResult(
+            messages=[f"Cloak activated. {player.cloak_charges} charges remaining."]
+        )
 
 
 AnyItem = Annotated[
