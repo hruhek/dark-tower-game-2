@@ -105,7 +105,7 @@ class Rope(Item):
         return ""
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        return ActionResult(messages=["You can't use rope directly."])
+        return ActionResult(messages=[])
 
 
 class Cloak(Item):
