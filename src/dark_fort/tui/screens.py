@@ -5,16 +5,8 @@ from textual.screen import Screen
 from textual.widgets import Button, Header, Static
 
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import Command, Phase
-from dark_fort.game.models import (
-    ActionResult,
-    Armor,
-    Cloak,
-    Potion,
-    Rope,
-    Scroll,
-    Weapon,
-)
+from dark_fort.game.enums import Command, ItemType, Phase
+from dark_fort.game.models import ActionResult
 from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
@@ -126,28 +118,19 @@ class GameScreen(Screen):
             return ActionResult(messages=["Your inventory is empty."])
 
         messages = ["Inventory:"]
+        type_prefixes = {
+            ItemType.WEAPON: "W",
+            ItemType.ARMOR: "A",
+            ItemType.POTION: "P",
+            ItemType.SCROLL: "S",
+            ItemType.ROPE: "R",
+            ItemType.CLOAK: "C",
+        }
         for i, item in enumerate(player.inventory):
-            prefix = "?"
-            stats = ""
-            if isinstance(item, Weapon):
-                prefix = "W"
-                if item.damage:
-                    stats = f" ({item.damage})"
-            elif isinstance(item, Armor):
-                prefix = "A"
-                if item.absorb:
-                    stats = f" ({item.absorb})"
-            elif isinstance(item, Potion):
-                prefix = "P"
-                if item.heal:
-                    stats = f" (heal {item.heal})"
-            elif isinstance(item, Scroll):
-                prefix = "S"
-            elif isinstance(item, Rope):
-                prefix = "R"
-            elif isinstance(item, Cloak):
-                prefix = "C"
-            messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats}")
+            prefix = type_prefixes.get(item.type, "?")
+            stats = item.display_stats()
+            stats_str = f" ({stats})" if stats else ""
+            messages.append(f"  {i + 1}. [{prefix}] {item.name}{stats_str}")
         return ActionResult(messages=messages)
 
     def _show_use_item(self) -> ActionResult:
@@ -188,17 +171,9 @@ class ShopScreen(Screen):
         log = self.query_one("#shop-log", LogView)
         log.add_message("Available wares:")
         for i, (item, price) in enumerate(SHOP_ITEMS):
-            stats = ""
-            if isinstance(item, Weapon) and item.damage:
-                stats = f" ({item.damage}"
-                if item.attack_bonus:
-                    stats += f"/+{item.attack_bonus}"
-                stats += ")"
-            elif isinstance(item, Armor) and item.absorb:
-                stats = f" (-{item.absorb})"
-            elif isinstance(item, Potion) and item.heal:
-                stats = f" (heal {item.heal})"
-            log.add_message(f"  {i + 1}. {item.name}{stats} — {price}s")
+            stats = item.display_stats()
+            stats_str = f" ({stats})" if stats else ""
+            log.add_message(f"  {i + 1}. {item.name}{stats_str} — {price}s")
         log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
         log.add_message("Press 1-9, 0 for item 10, or L to leave.")
         self.focus()
