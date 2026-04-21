@@ -1,5 +1,5 @@
 from dark_fort.game.dice import chance_in_6, roll
-from dark_fort.game.enums import Phase, ScrollType
+from dark_fort.game.enums import Phase, RoomEvent, ScrollType
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -208,18 +208,18 @@ def resolve_pit_trap(player: Player, dice_roll: int | None = None) -> ActionResu
 
 
 def resolve_room_event(
-    state: GameState, room_result: str, dice_roll: int | None = None
+    state: GameState, room_result: RoomEvent, dice_roll: int | None = None
 ) -> ActionResult:
     """Resolve a room table result."""
     messages: list[str] = []
     phase = None
 
-    if room_result == "Nothing. Explored.":
+    if room_result == RoomEvent.EMPTY:
         messages.append("The room is empty. You mark it as explored.")
         if state.current_room:
             state.current_room.explored = True
 
-    elif room_result == "Pit trap":
+    elif room_result == RoomEvent.PIT_TRAP:
         pit_result = resolve_pit_trap(state.player, dice_roll)
         messages.extend(pit_result.messages)
         if pit_result.phase:
@@ -227,7 +227,7 @@ def resolve_room_event(
         if state.current_room and not phase:
             state.current_room.explored = True
 
-    elif room_result == "Riddling Soothsayer":
+    elif room_result == RoomEvent.SOOTHSAYER:
         if dice_roll is None:
             dice_roll = roll("d6")
         if dice_roll % 2 == 1:
@@ -246,13 +246,13 @@ def resolve_room_event(
         if state.current_room and not phase:
             state.current_room.explored = True
 
-    elif room_result == "Weak monster":
+    elif room_result == RoomEvent.WEAK_MONSTER:
         monster = get_weak_monster(roll("d4") - 1)
         state.combat = CombatState(monster=monster, monster_hp=monster.hp)
         messages.append(f"A {monster.name} stands guard! Attack!")
         phase = Phase.COMBAT
 
-    elif room_result == "Tough monster":
+    elif room_result == RoomEvent.TOUGH_MONSTER:
         from dark_fort.game.tables import get_tough_monster
 
         monster = get_tough_monster(roll("d4") - 1)
@@ -260,7 +260,7 @@ def resolve_room_event(
         messages.append(f"A {monster.name} blocks your path! Attack!")
         phase = Phase.COMBAT
 
-    elif room_result == "Void Peddler":
+    elif room_result == RoomEvent.SHOP:
         messages.append("You encounter the Void Peddler. Wares are displayed.")
         phase = Phase.SHOP
 

@@ -1,4 +1,4 @@
-from dark_fort.game.enums import MonsterTier, ScrollType
+from dark_fort.game.enums import MonsterTier, RoomEvent, ScrollType
 from dark_fort.game.models import (
     AnyItem,
     Armor,
@@ -127,13 +127,13 @@ ROOM_SHAPES: list[str] = [
 # Room result table — indexed by d6 minus 1
 # ---------------------------------------------------------------------------
 
-ROOM_RESULTS: list[str] = [
-    "Nothing. Explored.",
-    "Pit trap",
-    "Riddling Soothsayer",
-    "Weak monster",
-    "Tough monster",
-    "Void Peddler",
+ROOM_RESULTS: list[RoomEvent] = [
+    RoomEvent.EMPTY,
+    RoomEvent.PIT_TRAP,
+    RoomEvent.SOOTHSAYER,
+    RoomEvent.WEAK_MONSTER,
+    RoomEvent.TOUGH_MONSTER,
+    RoomEvent.SHOP,
 ]
 
 # ---------------------------------------------------------------------------
