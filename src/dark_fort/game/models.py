@@ -1,30 +1,49 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase
-
-
-class Weapon(BaseModel):
-    name: str
-    damage: str
-    attack_bonus: int = 0
-
-
-class Armor(BaseModel):
-    name: str
-    absorb: str = "d4"
+from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase, ScrollType
 
 
 class Item(BaseModel):
     name: str
-    type: ItemType
-    damage: str | None = None
+
+
+class Weapon(Item):
+    type: Literal[ItemType.WEAPON] = ItemType.WEAPON
+    damage: str
     attack_bonus: int = 0
-    absorb: str | None = None
-    uses: int | None = None
+
+
+class Armor(Item):
+    type: Literal[ItemType.ARMOR] = ItemType.ARMOR
+    absorb: str = "d4"
+
+
+class Potion(Item):
+    type: Literal[ItemType.POTION] = ItemType.POTION
+    heal: str
+
+
+class Scroll(Item):
+    type: Literal[ItemType.SCROLL] = ItemType.SCROLL
+    scroll_type: ScrollType
+
+
+class Rope(Item):
+    type: Literal[ItemType.ROPE] = ItemType.ROPE
+
+
+class Cloak(Item):
+    type: Literal[ItemType.CLOAK] = ItemType.CLOAK
+
+
+AnyItem = Annotated[
+    Weapon | Armor | Potion | Scroll | Rope | Cloak,
+    Field(discriminator="type"),
+]
 
 
 class Monster(BaseModel):
@@ -45,8 +64,7 @@ class Player(BaseModel):
     points: int = 0
     weapon: Weapon | None = None
     armor: Armor | None = None
-    inventory: list[Item] = Field(default_factory=list)
-    scrolls: list[Item] = Field(default_factory=list)
+    inventory: list[AnyItem] = Field(default_factory=list)
     cloak_charges: int = 0
     attack_bonus: int = 0
     level_benefits: list[int] = Field(default_factory=list)
@@ -58,23 +76,6 @@ class Player(BaseModel):
         if len(v) != len(set(v)):
             raise ValueError("level_benefits must contain unique values")
         return v
-
-
-def weapon_to_item(weapon: Weapon) -> Item:
-    return Item(
-        name=weapon.name,
-        type=ItemType.WEAPON,
-        damage=weapon.damage,
-        attack_bonus=weapon.attack_bonus,
-    )
-
-
-def armor_to_item(armor: Armor) -> Item:
-    return Item(
-        name=armor.name,
-        type=ItemType.ARMOR,
-        absorb=armor.absorb,
-    )
 
 
 class Room(BaseModel):
