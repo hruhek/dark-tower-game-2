@@ -149,30 +149,33 @@ class GameEngine:
 
         self.state.player.silver -= price
 
-        if item.type == "armor":
-            if self.state.player.armor is not None:
-                self.state.player.inventory.append(
-                    armor_to_item(self.state.player.armor)
+        match item.type:
+            case ItemType.ARMOR:
+                if self.state.player.armor is not None:
+                    self.state.player.inventory.append(
+                        armor_to_item(self.state.player.armor)
+                    )
+                    msg = f"You buy {item.name} for {price}s. {self.state.player.armor.name} moved to inventory."
+                else:
+                    msg = f"You buy {item.name} for {price}s."
+                self.state.player.armor = Armor(
+                    name=item.name,
+                    absorb=item.absorb or "d4",
                 )
-                msg = f"You buy {item.name} for {price}s. {self.state.player.armor.name} moved to inventory."
-            else:
-                msg = f"You buy {item.name} for {price}s."
-            self.state.player.armor = Armor(
-                name=item.name,
-                absorb=item.absorb or "d4",
-            )
-        elif item.type == "cloak":
-            self.state.player.cloak_charges = roll("d4")
-            msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."
-        elif item.type == "scroll":
-            from dark_fort.game.tables import SCROLLS_TABLE
+            case ItemType.CLOAK:
+                self.state.player.cloak_charges = roll("d4")
+                msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."
+            case ItemType.SCROLL:
+                from dark_fort.game.tables import SCROLLS_TABLE
 
-            scroll_name, _, _ = SCROLLS_TABLE[roll("d4") - 1]
-            self.state.player.inventory.append(Item(name=scroll_name, type=item.type))
-            msg = f"You buy {scroll_name} for {price}s."
-        else:
-            self.state.player.inventory.append(item)
-            msg = f"You buy {item.name} for {price}s."
+                scroll_name, _, _ = SCROLLS_TABLE[roll("d4") - 1]
+                self.state.player.inventory.append(
+                    Item(name=scroll_name, type=item.type)
+                )
+                msg = f"You buy {scroll_name} for {price}s."
+            case _:
+                self.state.player.inventory.append(item)
+                msg = f"You buy {item.name} for {price}s."
 
         return ActionResult(messages=[msg])
 
