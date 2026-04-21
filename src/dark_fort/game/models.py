@@ -4,6 +4,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from dark_fort.game.dice import roll
 from dark_fort.game.enums import (
     Command,
     ItemType,
@@ -74,8 +75,6 @@ class Potion(Item):
         return f"heal {self.heal}"
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        from dark_fort.game.dice import roll
-
         messages: list[str] = []
         player = state.player
         heal = roll(self.heal)

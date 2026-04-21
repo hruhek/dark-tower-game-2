@@ -186,50 +186,7 @@ class GameEngine:
             return ActionResult(messages=["Invalid item index."])
 
         item = self.state.player.inventory[index]
-        messages: list[str] = []
-
-        match item:
-            case Potion():
-                heal = roll(item.heal)
-                self.state.player.hp = min(
-                    self.state.player.hp + heal, self.state.player.max_hp
-                )
-                messages.append(f"You drink the potion and heal {heal} HP.")
-                self.state.player.inventory.pop(index)
-
-            case Scroll():
-                messages.append(f"You unroll the {item.name}...")
-                self.state.player.inventory.pop(index)
-
-            case Weapon():
-                if self.state.player.weapon is not None:
-                    self.state.player.inventory.append(self.state.player.weapon)
-                    messages.append(
-                        f"{self.state.player.weapon.name} moved to inventory."
-                    )
-                self.state.player.weapon = item
-                messages.append(f"You equip the {item.name}.")
-                self.state.player.inventory.pop(index)
-
-            case Armor():
-                if self.state.player.armor is not None:
-                    self.state.player.inventory.append(self.state.player.armor)
-                    messages.append(
-                        f"{self.state.player.armor.name} moved to inventory."
-                    )
-                self.state.player.armor = item
-                messages.append(f"You equip the {item.name}.")
-                self.state.player.inventory.pop(index)
-
-            case Cloak():
-                self.state.player.cloak_charges = max(
-                    0, self.state.player.cloak_charges - 1
-                )
-                messages.append(
-                    f"Cloak activated. {self.state.player.cloak_charges} charges remaining."
-                )
-
-        return ActionResult(messages=messages)
+        return item.use(self.state, index)
 
     def check_game_over(self) -> ActionResult:
         """Check if player is dead."""
