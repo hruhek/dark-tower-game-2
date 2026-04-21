@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from dark_fort.game.enums import Command, Phase
+from dark_fort.game.enums import Command, ItemType, Phase
 from dark_fort.game.models import ActionResult
 
 if TYPE_CHECKING:
@@ -38,12 +38,12 @@ class ExploringState(PhaseState):
                 return ActionResult(messages=["Your inventory is empty."])
             messages = ["Inventory:"]
             type_prefixes = {
-                "weapon": "W",
-                "armor": "A",
-                "potion": "P",
-                "scroll": "S",
-                "rope": "R",
-                "cloak": "C",
+                ItemType.WEAPON: "W",
+                ItemType.ARMOR: "A",
+                ItemType.POTION: "P",
+                ItemType.SCROLL: "S",
+                ItemType.ROPE: "R",
+                ItemType.CLOAK: "C",
             }
             for i, item in enumerate(player.inventory):
                 prefix = type_prefixes.get(item.type, "?")
