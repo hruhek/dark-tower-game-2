@@ -1,12 +1,16 @@
 from dark_fort.game.dice import chance_in_6, roll
-from dark_fort.game.enums import ItemType, Phase
+from dark_fort.game.enums import Phase, ScrollType
 from dark_fort.game.models import (
     ActionResult,
+    Armor,
+    Cloak,
     CombatState,
     GameState,
-    Item,
     Monster,
     Player,
+    Potion,
+    Rope,
+    Scroll,
     Weapon,
 )
 from dark_fort.game.tables import (
@@ -16,18 +20,18 @@ from dark_fort.game.tables import (
 )
 
 
-def generate_starting_equipment() -> tuple[Weapon, Item]:
+def generate_starting_equipment() -> tuple[Weapon, Armor | Potion | Scroll | Cloak]:
     """Roll 1d4 on weapon table and 1d4 on item table."""
     weapon_idx = roll("d4") - 1
     item_idx = roll("d4") - 1
 
     weapon = WEAPONS_TABLE[weapon_idx]
 
-    item_table = [
-        Item(name="Armor", type=ItemType.ARMOR, absorb="d4"),
-        Item(name="Potion", type=ItemType.POTION, damage="d6"),
-        Item(name="Scroll: Summon weak daemon", type=ItemType.SCROLL),
-        Item(name="Cloak of invisibility", type=ItemType.CLOAK),
+    item_table: list[Armor | Potion | Scroll | Cloak] = [
+        Armor(name="Armor", absorb="d4"),
+        Potion(name="Potion", heal="d6"),
+        Scroll(name="Scroll: Summon weak daemon", scroll_type=ScrollType.SUMMON_DAEMON),
+        Cloak(name="Cloak of invisibility"),
     ]
     item = item_table[item_idx]
 
@@ -116,16 +120,14 @@ def resolve_combat_hit(
 def _resolve_loot(monster: Monster, player: Player, messages: list[str]) -> None:
     """Handle monster loot drops."""
     if monster.special == "loot_dagger_2_in_6" and chance_in_6(2):
-        player.inventory.append(
-            Item(name="Dagger", type=ItemType.WEAPON, damage="d4", attack_bonus=1)
-        )
+        player.inventory.append(Weapon(name="Dagger", damage="d4", attack_bonus=1))
         messages.append("Loot: Dagger")
     elif monster.special == "loot_scroll_2_in_6" and chance_in_6(2):
-        scroll_name, _, _ = SCROLLS_TABLE[roll("d4") - 1]
-        player.inventory.append(Item(name=scroll_name, type=ItemType.SCROLL))
+        scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
+        player.inventory.append(Scroll(name=scroll_name, scroll_type=scroll_type))
         messages.append("Loot: Random scroll")
     elif monster.special == "loot_rope_2_in_6" and chance_in_6(2):
-        player.inventory.append(Item(name="Rope", type=ItemType.ROPE))
+        player.inventory.append(Rope(name="Rope"))
         messages.append("Loot: Rope")
 
 
@@ -172,13 +174,9 @@ def apply_level_benefit(benefit_number: int, player: Player) -> None:
         player.hp = min(player.hp + 5, player.max_hp)
     elif benefit_number == 4:
         for _ in range(5):
-            player.inventory.append(
-                Item(name="Potion", type=ItemType.POTION, damage="d6")
-            )
+            player.inventory.append(Potion(name="Potion", heal="d6"))
     elif benefit_number == 5:
-        player.inventory.append(
-            Item(name="Mighty Zweihänder", type=ItemType.WEAPON, damage="d6+2")
-        )
+        player.inventory.append(Weapon(name="Mighty Zweihänder", damage="d6+2"))
 
 
 def resolve_pit_trap(player: Player, dice_roll: int | None = None) -> ActionResult:
@@ -270,4 +268,4 @@ def resolve_room_event(
 
 
 def has_rope(player: Player) -> bool:
-    return any(item.type == ItemType.ROPE for item in player.inventory)
+    return any(isinstance(item, Rope) for item in player.inventory)

@@ -1,12 +1,12 @@
-from dark_fort.game.enums import ItemType, MonsterTier, Phase
+from dark_fort.game.enums import MonsterTier, Phase
 from dark_fort.game.models import (
     Armor,
     CombatState,
     GameState,
-    Item,
     Monster,
     Player,
     Room,
+    Rope,
     Weapon,
 )
 from dark_fort.game.rules import (
@@ -121,7 +121,7 @@ class TestLevelBenefits:
 class TestPitTrap:
     def test_pit_trap_with_rope_gets_bonus(self):
         player = Player()
-        player.inventory.append(Item(name="Rope", type=ItemType.ROPE))
+        player.inventory.append(Rope(name="Rope"))
         resolve_pit_trap(player, dice_roll=4)
         assert player.hp == 15
 
@@ -155,7 +155,7 @@ class TestMonsterSpecial:
 class TestHasRope:
     def test_has_rope_returns_true(self):
         player = Player()
-        player.inventory.append(Item(name="Rope", type=ItemType.ROPE))
+        player.inventory.append(Rope(name="Rope"))
         assert has_rope(player) is True
 
     def test_has_rope_returns_false(self):
@@ -186,7 +186,7 @@ class TestWeaponAttackBonus:
 class TestStartingEquipmentArmor:
     def test_starting_armor_item_has_absorb(self):
         weapon, item = generate_starting_equipment()
-        if item.type == ItemType.ARMOR:
+        if isinstance(item, Armor):
             assert item.absorb == "d4"
 
 
