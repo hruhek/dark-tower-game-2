@@ -42,3 +42,12 @@ class ScrollType(StrEnum):
     SOUTHERN_GATE = auto()
     AEGIS_OF_SORROW = auto()
     FALSE_OMEN = auto()
+
+
+class RoomEvent(StrEnum):
+    EMPTY = "Nothing. Explored."
+    PIT_TRAP = "Pit trap"
+    SOOTHSAYER = "Riddling Soothsayer"
+    WEAK_MONSTER = "Weak monster"
+    TOUGH_MONSTER = "Tough monster"
+    SHOP = "Void Peddler"
