@@ -1,6 +1,6 @@
 from dark_fort.game.engine import GameEngine
-from dark_fort.game.enums import ItemType, Phase
-from dark_fort.game.models import Armor, Item
+from dark_fort.game.enums import Phase
+from dark_fort.game.models import Armor, Weapon
 
 
 class TestGameEngine:
@@ -74,7 +74,7 @@ class TestEquipWeapon:
         engine.start_game()
         engine.state.player.inventory.clear()
         engine.state.player.inventory.append(
-            Item(name="Test Sword", type=ItemType.WEAPON, damage="d6", attack_bonus=1)
+            Weapon(name="Test Sword", damage="d6", attack_bonus=1)
         )
         engine.use_item(0)
         assert engine.state.player.weapon is not None
@@ -88,7 +88,7 @@ class TestEquipWeapon:
         old_weapon = engine.state.player.weapon
         assert old_weapon is not None
         engine.state.player.inventory.append(
-            Item(name="Sword", type=ItemType.WEAPON, damage="d6", attack_bonus=1)
+            Weapon(name="Sword", damage="d6", attack_bonus=1)
         )
         engine.use_item(0)
         assert engine.state.player.weapon is not None
@@ -103,7 +103,7 @@ class TestEquipWeapon:
         engine.state.player.inventory.clear()
         engine.state.player.weapon = None
         engine.state.player.inventory.append(
-            Item(name="Dagger", type=ItemType.WEAPON, damage="d4", attack_bonus=1)
+            Weapon(name="Dagger", damage="d4", attack_bonus=1)
         )
         engine.use_item(0)
         assert engine.state.player.weapon is not None
@@ -115,9 +115,7 @@ class TestEquipArmor:
         engine = GameEngine()
         engine.start_game()
         engine.state.player.inventory.clear()
-        engine.state.player.inventory.append(
-            Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
-        )
+        engine.state.player.inventory.append(Armor(name="Armor", absorb="d4"))
         engine.use_item(0)
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
@@ -127,9 +125,7 @@ class TestEquipArmor:
         engine.start_game()
         engine.state.player.inventory.clear()
         engine.state.player.armor = Armor(name="Old Armor", absorb="d4")
-        engine.state.player.inventory.append(
-            Item(name="New Armor", type=ItemType.ARMOR, absorb="d6")
-        )
+        engine.state.player.inventory.append(Armor(name="New Armor", absorb="d6"))
         engine.use_item(0)
         assert engine.state.player.armor.name == "New Armor"
         assert any(item.name == "Old Armor" for item in engine.state.player.inventory)
@@ -139,9 +135,7 @@ class TestEquipArmor:
         engine.start_game()
         engine.state.player.inventory.clear()
         engine.state.player.armor = None
-        engine.state.player.inventory.append(
-            Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
-        )
+        engine.state.player.inventory.append(Armor(name="Armor", absorb="d4"))
         engine.use_item(0)
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
@@ -175,9 +169,8 @@ class TestEquipSwapIntegration:
         engine = GameEngine()
         engine.start_game()
         old_weapon_name = engine.state.player.weapon.name  # ty: ignore[unresolved-attribute]
-        engine.state.player.inventory.append(
-            Item(name="Flail", type=ItemType.WEAPON, damage="d6+1")
-        )
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(Weapon(name="Flail", damage="d6+1"))
         engine.use_item(0)
         assert engine.state.player.weapon.name == "Flail"  # ty: ignore[unresolved-attribute]
         assert any(
@@ -189,9 +182,7 @@ class TestEquipSwapIntegration:
         engine.start_game()
         engine.state.player.armor = Armor(name="Armor", absorb="d4")
         engine.state.player.inventory.clear()  # Clear starting items
-        engine.state.player.inventory.append(
-            Item(name="Chain Mail", type=ItemType.ARMOR, absorb="d6")
-        )
+        engine.state.player.inventory.append(Armor(name="Chain Mail", absorb="d6"))
         engine.use_item(0)
         assert engine.state.player.armor.name == "Chain Mail"
         assert any(item.name == "Armor" for item in engine.state.player.inventory)

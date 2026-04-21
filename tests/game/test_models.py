@@ -1,19 +1,19 @@
 import pytest
 from pydantic import ValidationError
 
-from dark_fort.game.enums import ItemType, MonsterTier, Phase
+from dark_fort.game.enums import MonsterTier, Phase, ScrollType
 from dark_fort.game.models import (
     ActionResult,
     Armor,
+    Cloak,
     CombatState,
     GameState,
-    Item,
     Monster,
     Player,
+    Potion,
     Room,
+    Scroll,
     Weapon,
-    armor_to_item,
-    weapon_to_item,
 )
 
 
@@ -29,16 +29,16 @@ class TestWeapon:
         assert weapon.attack_bonus == 1
 
 
-class TestItem:
+class TestPotion:
     def test_create_potion(self):
-        item = Item(name="Potion", type=ItemType.POTION)
-        assert item.type == ItemType.POTION
-        assert item.damage is None
+        potion = Potion(name="Potion", heal="d6")
+        assert potion.heal == "d6"
 
-    def test_create_weapon_item(self):
-        item = Item(name="Dagger", type=ItemType.WEAPON, damage="d4", attack_bonus=1)
-        assert item.damage == "d4"
-        assert item.attack_bonus == 1
+
+class TestScroll:
+    def test_create_scroll(self):
+        scroll = Scroll(name="Scroll of Fire", scroll_type=ScrollType.SUMMON_DAEMON)
+        assert scroll.scroll_type == ScrollType.SUMMON_DAEMON
 
 
 class TestMonster:
@@ -162,34 +162,28 @@ class TestPlayerArmor:
         assert player.armor.absorb == "d4"
 
 
-class TestItemAbsorb:
-    def test_create_armor_item_with_absorb(self):
-        item = Item(name="Armor", type=ItemType.ARMOR, absorb="d4")
-        assert item.absorb == "d4"
+class TestInventory:
+    def test_inventory_with_weapon(self):
+        player = Player()
+        player.inventory = [Weapon(name="Sword", damage="d6")]
+        assert isinstance(player.inventory[0], Weapon)
 
-    def test_item_absorb_defaults_none(self):
-        item = Item(name="Potion", type=ItemType.POTION)
-        assert item.absorb is None
+    def test_inventory_with_armor(self):
+        player = Player()
+        player.inventory = [Armor(name="Armor", absorb="d4")]
+        assert isinstance(player.inventory[0], Armor)
 
+    def test_inventory_with_potion(self):
+        player = Player()
+        player.inventory = [Potion(name="Potion", heal="d6")]
+        assert isinstance(player.inventory[0], Potion)
 
-class TestConversionHelpers:
-    def test_weapon_to_item(self):
-        weapon = Weapon(name="Sword", damage="d6", attack_bonus=1)
-        item = weapon_to_item(weapon)
-        assert item.name == "Sword"
-        assert item.type == ItemType.WEAPON
-        assert item.damage == "d6"
-        assert item.attack_bonus == 1
+    def test_inventory_with_scroll(self):
+        player = Player()
+        player.inventory = [Scroll(name="Scroll", scroll_type=ScrollType.SOUTHERN_GATE)]
+        assert isinstance(player.inventory[0], Scroll)
 
-    def test_armor_to_item(self):
-        armor = Armor(name="Armor", absorb="d4")
-        item = armor_to_item(armor)
-        assert item.name == "Armor"
-        assert item.type == ItemType.ARMOR
-        assert item.absorb == "d4"
-
-    def test_weapon_to_item_preserves_all_fields(self):
-        weapon = Weapon(name="Flail", damage="d6+1")
-        item = weapon_to_item(weapon)
-        assert item.attack_bonus == 0
-        assert item.damage == "d6+1"
+    def test_inventory_with_cloak(self):
+        player = Player()
+        player.inventory = [Cloak(name="Cloak")]
+        assert isinstance(player.inventory[0], Cloak)

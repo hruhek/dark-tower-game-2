@@ -1,4 +1,4 @@
-from dark_fort.game.enums import ItemType, MonsterTier
+from dark_fort.game.enums import MonsterTier
 from dark_fort.game.tables import (
     ARMOR_TABLE,
     ENTRANCE_RESULTS,
@@ -116,8 +116,10 @@ class TestArmorTable:
 
 class TestShopItemsArmor:
     def test_armor_shop_item_has_absorb(self):
+        from dark_fort.game.models import Armor
+
         armor_items = [
-            (item, price) for item, price in SHOP_ITEMS if item.type == ItemType.ARMOR
+            (item, price) for item, price in SHOP_ITEMS if isinstance(item, Armor)
         ]
         assert len(armor_items) >= 1
         armor_item, price = armor_items[0]

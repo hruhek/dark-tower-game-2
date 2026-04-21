@@ -1,5 +1,5 @@
-from dark_fort.game.enums import Command, ItemType, MonsterTier, Phase
-from dark_fort.game.models import CombatState, Item, Monster
+from dark_fort.game.enums import Command, MonsterTier, Phase
+from dark_fort.game.models import CombatState, Monster, Potion
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.screens import ShopScreen
 from dark_fort.tui.widgets import CommandBar
@@ -128,7 +128,7 @@ class TestGameScreenActions:
             await pilot.press("enter")
             await pilot.pause()
             pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
-                Item(name="Potion", type=ItemType.POTION, damage="d6")
+                Potion(name="Potion", heal="d6")
             )
             inv_button = pilot.app.screen.query_one("#cmd-inventory")
             await pilot.click(inv_button)
