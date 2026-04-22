@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dark_fort.game.dice import roll
+from dark_fort.game.dungeon import DungeonBuilder
 from dark_fort.game.enums import EquipSlot, Phase
 from dark_fort.game.models import (
     ActionResult,
@@ -23,7 +24,6 @@ from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
     ROOM_RESULTS,
     SHOP_ITEMS,
-    get_room_shape,
 )
 
 
@@ -38,7 +38,7 @@ class GameEngine:
 
     def __init__(self) -> None:
         self.state = GameState(phase=Phase.TITLE)
-        self._room_counter = 0
+        self._dungeon = DungeonBuilder()
 
     @property
     def explored_count(self) -> int:
@@ -47,7 +47,7 @@ class GameEngine:
     def start_game(self) -> ActionResult:
         """Generate entrance room and starting equipment."""
         self.state = GameState(phase=Phase.ENTRANCE)
-        self._room_counter = 0
+        self._dungeon = DungeonBuilder()
 
         weapon, item = generate_starting_equipment()
         self.state.player.weapon = weapon
@@ -245,19 +245,5 @@ class GameEngine:
         return ActionResult(messages=messages)
 
     def _generate_room(self, is_entrance: bool = False) -> Room:
-        """Generate a new room with shape, doors, and connections."""
-        room_id = self._room_counter
-        self._room_counter += 1
-
-        shape_roll = roll("d6") + roll("d6")
-        shape = get_room_shape(shape_roll)
-
-        doors = roll("d4")
-
-        return Room(
-            id=room_id,
-            shape=shape,
-            doors=doors,
-            result="pending",
-            explored=False,
-        )
+        """Generate a new room via DungeonBuilder."""
+        return self._dungeon.build_room(is_entrance=is_entrance)
