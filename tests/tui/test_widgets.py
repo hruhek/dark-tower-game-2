@@ -3,6 +3,7 @@ from textual.widgets import Label
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
 from dark_fort.game.models import Armor, Player, Weapon
+from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
@@ -86,6 +87,7 @@ class TestShopScreen:
         engine = GameEngine()
         engine.start_game()
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         screen = ShopScreen(engine=engine)
         assert screen is not None
 

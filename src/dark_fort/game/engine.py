@@ -140,10 +140,10 @@ class GameEngine:
         if self.state.phase != Phase.SHOP:
             return ActionResult(messages=["The shop is not open."])
 
-        if index < 0 or index >= len(SHOP_ITEMS):
+        if index < 0 or index >= len(self.state.shop_wares):
             return ActionResult(messages=["Invalid item."])
 
-        entry = SHOP_ITEMS[index]
+        entry = self.state.shop_wares[index]
         item, price = entry.item, entry.price
 
         if self.state.player.silver < price:

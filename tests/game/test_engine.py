@@ -28,6 +28,7 @@ class TestGameEngine:
         engine.start_game()
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
 
         result = engine.buy_item(0)
         assert engine.state.player.silver == 16
@@ -38,6 +39,7 @@ class TestGameEngine:
         engine.start_game()
         engine.state.player.silver = 1
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
 
         result = engine.buy_item(7)
         assert any("not enough" in m.lower() for m in result.messages)
@@ -149,6 +151,7 @@ class TestBuyArmor:
         engine.state.player.armor = None  # Ensure no armor equipped
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Armor is index 8
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
@@ -160,6 +163,7 @@ class TestBuyArmor:
         engine.state.player.armor = Armor(name="Old Armor", absorb="d4")
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Armor is index 8
         assert engine.state.player.armor.name == "Armor"
         assert any(item.name == "Old Armor" for item in engine.state.player.inventory)
@@ -193,6 +197,7 @@ class TestEquipSwapIntegration:
         engine.start_game()
         engine.state.player.silver = 30
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Buy Armor
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
