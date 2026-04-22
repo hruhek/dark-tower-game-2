@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from dark_fort.game.dice import roll
 from dark_fort.game.enums import (
-    Command,
+    EquipSlot,
     ItemType,
     MonsterSpecial,
     MonsterTier,
@@ -19,6 +19,7 @@ from dark_fort.game.enums import (
 # for save/load serialization, and runtime validation on deserialization.
 class Item(BaseModel):
     name: str
+    equip_slot: EquipSlot = EquipSlot.NONE
 
     def use(self, state: GameState, index: int) -> ActionResult:
         raise NotImplementedError(f"use() not implemented for {type(self).__name__}")
@@ -29,6 +30,7 @@ class Item(BaseModel):
 
 class Weapon(Item):
     type: Literal[ItemType.WEAPON] = ItemType.WEAPON
+    equip_slot: EquipSlot = EquipSlot.WEAPON
     damage: str
     attack_bonus: int = 0
 
@@ -52,6 +54,7 @@ class Weapon(Item):
 
 class Armor(Item):
     type: Literal[ItemType.ARMOR] = ItemType.ARMOR
+    equip_slot: EquipSlot = EquipSlot.ARMOR
     absorb: str = "d4"
 
     def display_stats(self) -> str:
@@ -71,6 +74,7 @@ class Armor(Item):
 
 class Potion(Item):
     type: Literal[ItemType.POTION] = ItemType.POTION
+    equip_slot: EquipSlot = EquipSlot.NONE
     heal: str
 
     def display_stats(self) -> str:
@@ -88,6 +92,7 @@ class Potion(Item):
 
 class Scroll(Item):
     type: Literal[ItemType.SCROLL] = ItemType.SCROLL
+    equip_slot: EquipSlot = EquipSlot.NONE
     scroll_type: ScrollType
 
     def display_stats(self) -> str:
@@ -101,6 +106,7 @@ class Scroll(Item):
 
 class Rope(Item):
     type: Literal[ItemType.ROPE] = ItemType.ROPE
+    equip_slot: EquipSlot = EquipSlot.NONE
 
     def display_stats(self) -> str:
         return ""
@@ -111,6 +117,7 @@ class Rope(Item):
 
 class Cloak(Item):
     type: Literal[ItemType.CLOAK] = ItemType.CLOAK
+    equip_slot: EquipSlot = EquipSlot.SPECIAL
 
     def display_stats(self) -> str:
         return ""
@@ -194,11 +201,19 @@ class GameState(BaseModel):
     phase: Phase
     combat: CombatState | None = None
     level_up_queue: bool = False
+    shop_wares: list[ShopEntry] = Field(default_factory=list)
     log: list[str] = Field(default_factory=list)
 
 
 class ActionResult(BaseModel):
     messages: list[str]
     phase: Phase | None = None
-    choices: list[Command] = Field(default_factory=list)
-    state_delta: dict[str, Any] = Field(default_factory=dict)
+
+
+class RoomEventResult(BaseModel):
+    messages: list[str]
+    phase: Phase | None = None
+    combat: CombatState | None = None
+    explored: bool = False
+    silver_delta: int = 0
+    hp_delta: int = 0

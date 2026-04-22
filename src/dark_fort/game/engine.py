@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dark_fort.game.dice import roll
-from dark_fort.game.enums import Phase
+from dark_fort.game.dungeon import DungeonBuilder
+from dark_fort.game.enums import EquipSlot, Phase
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -23,7 +24,6 @@ from dark_fort.game.tables import (
     ENTRANCE_RESULTS,
     ROOM_RESULTS,
     SHOP_ITEMS,
-    get_room_shape,
 )
 
 
@@ -38,7 +38,7 @@ class GameEngine:
 
     def __init__(self) -> None:
         self.state = GameState(phase=Phase.TITLE)
-        self._room_counter = 0
+        self._dungeon = DungeonBuilder()
 
     @property
     def explored_count(self) -> int:
@@ -47,7 +47,7 @@ class GameEngine:
     def start_game(self) -> ActionResult:
         """Generate entrance room and starting equipment."""
         self.state = GameState(phase=Phase.ENTRANCE)
-        self._room_counter = 0
+        self._dungeon = DungeonBuilder()
 
         weapon, item = generate_starting_equipment()
         self.state.player.weapon = weapon
@@ -93,11 +93,23 @@ class GameEngine:
         room_result_idx = roll("d6") - 1
         room_result = ROOM_RESULTS[room_result_idx]
 
-        result = resolve_room_event(self.state, room_result)
+        result = resolve_room_event(room_result, self.state.player)
         messages.extend(result.messages)
+
+        if result.combat:
+            self.state.combat = result.combat
+        if result.explored and self.state.current_room:
+            self.state.current_room.explored = True
+        if result.silver_delta:
+            self.state.player.silver += result.silver_delta
+        if result.hp_delta:
+            self.state.player.hp += result.hp_delta
 
         final_phase = result.phase or Phase.EXPLORING
         self.state.phase = final_phase
+
+        if final_phase == Phase.SHOP:
+            self.state.shop_wares = list(SHOP_ITEMS)
 
         return ActionResult(messages=messages, phase=final_phase)
 
@@ -137,10 +149,10 @@ class GameEngine:
         if self.state.phase != Phase.SHOP:
             return ActionResult(messages=["The shop is not open."])
 
-        if index < 0 or index >= len(SHOP_ITEMS):
+        if index < 0 or index >= len(self.state.shop_wares):
             return ActionResult(messages=["Invalid item."])
 
-        entry = SHOP_ITEMS[index]
+        entry = self.state.shop_wares[index]
         item, price = entry.item, entry.price
 
         if self.state.player.silver < price:
@@ -152,34 +164,45 @@ class GameEngine:
 
         self.state.player.silver -= price
 
-        match item:
-            case Armor():
+        match item.equip_slot:
+            case EquipSlot.WEAPON:
+                weapon = item
+                if self.state.player.weapon is not None:
+                    self.state.player.inventory.append(self.state.player.weapon)
+                    msg = f"You buy {weapon.name} for {price}s. {self.state.player.weapon.name} moved to inventory."
+                else:
+                    msg = f"You buy {weapon.name} for {price}s."
+                self.state.player.weapon = weapon  # ty: ignore[invalid-assignment]
+            case EquipSlot.ARMOR:
+                armor = item
                 if self.state.player.armor is not None:
                     self.state.player.inventory.append(self.state.player.armor)
-                    msg = f"You buy {item.name} for {price}s. {self.state.player.armor.name} moved to inventory."
+                    msg = f"You buy {armor.name} for {price}s. {self.state.player.armor.name} moved to inventory."
                 else:
-                    msg = f"You buy {item.name} for {price}s."
-                self.state.player.armor = item
-            case Cloak():
+                    msg = f"You buy {armor.name} for {price}s."
+                self.state.player.armor = armor  # ty: ignore[invalid-assignment]
+            case EquipSlot.SPECIAL:
                 self.state.player.cloak_charges = roll("d4")
                 msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."
-            case Scroll():
-                from dark_fort.game.tables import SCROLLS_TABLE
+            case EquipSlot.NONE:
+                if isinstance(item, Scroll):
+                    from dark_fort.game.tables import SCROLLS_TABLE
 
-                scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
-                self.state.player.inventory.append(
-                    Scroll(name=scroll_name, scroll_type=scroll_type)
-                )
-                msg = f"You buy {scroll_name} for {price}s."
-            case _:
-                self.state.player.inventory.append(item)
-                msg = f"You buy {item.name} for {price}s."
+                    scroll_name, scroll_type, _ = SCROLLS_TABLE[roll("d4") - 1]
+                    self.state.player.inventory.append(
+                        Scroll(name=scroll_name, scroll_type=scroll_type)
+                    )
+                    msg = f"You buy {scroll_name} for {price}s."
+                else:
+                    self.state.player.inventory.append(item)
+                    msg = f"You buy {item.name} for {price}s."
 
         return ActionResult(messages=[msg])
 
     def leave_shop(self) -> ActionResult:
         """Leave the Void Peddler."""
         self.state.phase = Phase.EXPLORING
+        self.state.shop_wares = []
         if self.state.current_room:
             self.state.current_room.explored = True
         return ActionResult(
@@ -232,20 +255,20 @@ class GameEngine:
         self.state.level_up_queue = False
         return ActionResult(messages=messages)
 
+    def save(self) -> dict:
+        return {
+            "state": self.state.snapshot(),
+            "room_counter": self._dungeon._counter,
+        }
+
+    @classmethod
+    def load(cls, data: dict) -> GameEngine:
+        engine = cls.__new__(cls)
+        engine.state = GameState.restore(data["state"])
+        engine._dungeon = DungeonBuilder()
+        engine._dungeon._counter = data["room_counter"]
+        return engine
+
     def _generate_room(self, is_entrance: bool = False) -> Room:
-        """Generate a new room with shape, doors, and connections."""
-        room_id = self._room_counter
-        self._room_counter += 1
-
-        shape_roll = roll("d6") + roll("d6")
-        shape = get_room_shape(shape_roll)
-
-        doors = roll("d4")
-
-        return Room(
-            id=room_id,
-            shape=shape,
-            doors=doors,
-            result="pending",
-            explored=False,
-        )
+        """Generate a new room via DungeonBuilder."""
+        return self._dungeon.build_room(is_entrance=is_entrance)

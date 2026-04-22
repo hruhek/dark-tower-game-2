@@ -1,6 +1,7 @@
 from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Phase
 from dark_fort.game.models import Armor, Weapon
+from dark_fort.game.tables import SHOP_ITEMS
 
 
 class TestGameEngine:
@@ -27,6 +28,7 @@ class TestGameEngine:
         engine.start_game()
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
 
         result = engine.buy_item(0)
         assert engine.state.player.silver == 16
@@ -37,6 +39,7 @@ class TestGameEngine:
         engine.start_game()
         engine.state.player.silver = 1
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
 
         result = engine.buy_item(7)
         assert any("not enough" in m.lower() for m in result.messages)
@@ -148,6 +151,7 @@ class TestBuyArmor:
         engine.state.player.armor = None  # Ensure no armor equipped
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Armor is index 8
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
@@ -159,6 +163,7 @@ class TestBuyArmor:
         engine.state.player.armor = Armor(name="Old Armor", absorb="d4")
         engine.state.player.silver = 20
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Armor is index 8
         assert engine.state.player.armor.name == "Armor"
         assert any(item.name == "Old Armor" for item in engine.state.player.inventory)
@@ -192,6 +197,57 @@ class TestEquipSwapIntegration:
         engine.start_game()
         engine.state.player.silver = 30
         engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
         engine.buy_item(8)  # Buy Armor
         assert engine.state.player.armor is not None
         assert engine.state.player.armor.name == "Armor"
+
+
+class TestSaveLoad:
+    def test_save_and_load_preserves_state(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.silver = 42
+        engine.state.player.points = 10
+
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+
+        assert loaded.state.player.silver == 42
+        assert loaded.state.player.points == 10
+        assert loaded.state.phase == Phase.EXPLORING
+
+    def test_save_and_load_preserves_rooms(self):
+        engine = GameEngine()
+        engine.start_game()
+        room_count = len(engine.state.rooms)
+
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+
+        assert len(loaded.state.rooms) == room_count
+
+    def test_save_and_load_preserves_room_counter(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.enter_new_room()
+        saved = engine.save()
+        loaded = GameEngine.load(saved)
+        next_room = loaded._dungeon.build_room()
+        assert next_room.id == len(engine.state.rooms)
+
+
+class TestShopWares:
+    def test_shop_wares_populated_on_shop_event(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.shop_wares = list(SHOP_ITEMS)
+        assert len(engine.state.shop_wares) > 0
+
+    def test_shop_wares_cleared_on_leave(self):
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.phase = Phase.SHOP
+        engine.state.shop_wares = list(SHOP_ITEMS)
+        engine.leave_shop()
+        assert engine.state.shop_wares == []

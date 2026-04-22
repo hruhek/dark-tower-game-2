@@ -8,7 +8,7 @@ from dark_fort.game.engine import GameEngine
 from dark_fort.game.enums import Command, Phase
 from dark_fort.game.models import ActionResult
 from dark_fort.game.phase_states import PHASE_STATES
-from dark_fort.game.tables import SHOP_ITEMS
+from dark_fort.tui.display import format_inventory, format_shop_wares
 from dark_fort.tui.widgets import CommandBar, LogView, StatusBar
 
 if TYPE_CHECKING:
@@ -87,7 +87,10 @@ class GameScreen(Screen):
         action = button_id.replace("cmd-", "")
         result = self._handle_command(action)
         if result:
-            self._log_messages(result.messages)
+            if Command(action) == Command.INVENTORY:
+                self._log_messages(format_inventory(self.engine.state))
+            else:
+                self._log_messages(result.messages)
             if result.phase:
                 self._handle_phase_change(result)
             self._update_commands()
@@ -130,11 +133,8 @@ class ShopScreen(Screen):
 
     def on_mount(self) -> None:
         log = self.query_one("#shop-log", LogView)
-        log.add_message("Available wares:")
-        for i, entry in enumerate(SHOP_ITEMS):
-            log.add_message(f"  {i + 1}. {entry.display_stats()}")
-        log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
-        log.add_message("Press 1-9, 0 for item 10, or L to leave.")
+        for line in format_shop_wares(self.engine.state):
+            log.add_message(line)
         self.focus()
 
     def action_leave(self) -> None:
@@ -153,7 +153,7 @@ class ShopScreen(Screen):
         if event.character and event.character.isdigit():
             digit = int(event.character)
             index = digit - 1 if digit != 0 else 9
-            if index < 0 or index >= len(SHOP_ITEMS):
+            if index < 0 or index >= len(self.engine.state.shop_wares):
                 return
             result = self.engine.buy_item(index)
             log = self.query_one("#shop-log", LogView)

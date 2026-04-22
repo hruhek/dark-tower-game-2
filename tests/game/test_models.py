@@ -1,7 +1,13 @@
 import pytest
 from pydantic import ValidationError
 
-from dark_fort.game.enums import MonsterSpecial, MonsterTier, Phase, ScrollType
+from dark_fort.game.enums import (
+    EquipSlot,
+    MonsterSpecial,
+    MonsterTier,
+    Phase,
+    ScrollType,
+)
 from dark_fort.game.models import (
     ActionResult,
     Armor,
@@ -12,6 +18,7 @@ from dark_fort.game.models import (
     Player,
     Potion,
     Room,
+    Rope,
     Scroll,
     Weapon,
 )
@@ -119,7 +126,16 @@ class TestGameState:
         assert state.rooms == {}
         assert state.combat is None
         assert state.level_up_queue is False
+        assert state.shop_wares == []
         assert state.log == []
+
+    def test_game_state_snapshot_and_restore(self):
+        state = GameState(phase=Phase.EXPLORING)
+        state.player.silver = 42
+        data = state.snapshot()
+        restored = GameState.restore(data)
+        assert restored.phase == Phase.EXPLORING
+        assert restored.player.silver == 42
 
 
 class TestActionResult:
@@ -130,12 +146,6 @@ class TestActionResult:
     def test_action_result_with_phase_change(self):
         result = ActionResult(messages=[], phase=Phase.COMBAT)
         assert result.phase == Phase.COMBAT
-
-    def test_action_result_with_choices(self):
-        from dark_fort.game.enums import Command
-
-        result = ActionResult(messages=[], choices=[Command.ATTACK, Command.FLEE])
-        assert len(result.choices) == 2
 
 
 class TestArmor:
@@ -187,3 +197,29 @@ class TestInventory:
         player = Player()
         player.inventory = [Cloak(name="Cloak")]
         assert isinstance(player.inventory[0], Cloak)
+
+
+class TestEquipSlot:
+    def test_weapon_equip_slot(self):
+        weapon = Weapon(name="Sword", damage="d6")
+        assert weapon.equip_slot == EquipSlot.WEAPON
+
+    def test_armor_equip_slot(self):
+        armor = Armor(name="Armor", absorb="d4")
+        assert armor.equip_slot == EquipSlot.ARMOR
+
+    def test_potion_equip_slot(self):
+        potion = Potion(name="Potion", heal="d6")
+        assert potion.equip_slot == EquipSlot.NONE
+
+    def test_scroll_equip_slot(self):
+        scroll = Scroll(name="Scroll", scroll_type=ScrollType.SUMMON_DAEMON)
+        assert scroll.equip_slot == EquipSlot.NONE
+
+    def test_rope_equip_slot(self):
+        rope = Rope(name="Rope")
+        assert rope.equip_slot == EquipSlot.NONE
+
+    def test_cloak_equip_slot(self):
+        cloak = Cloak(name="Cloak")
+        assert cloak.equip_slot == EquipSlot.SPECIAL
