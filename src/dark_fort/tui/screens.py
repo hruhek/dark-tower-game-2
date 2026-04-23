@@ -187,6 +187,10 @@ class ShopScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
+        yield StatusBar(
+            player=self.engine.state.player,
+            explored=self.engine.explored_count,
+        )
         yield Static("The Void Peddler", classes="title-header")
         log = LogView(id="shop-log")
         log.can_focus = False
@@ -198,6 +202,12 @@ class ShopScreen(Screen):
         for line in format_shop_wares(self.engine.state):
             log.add_message(line)
         self.focus()
+
+    def _refresh_status(self) -> None:
+        """Update StatusBar with current state."""
+        status_bar = self.query_one(StatusBar)
+        status_bar.player = self.engine.state.player
+        status_bar.explored = self.engine.explored_count
 
     def action_leave(self) -> None:
         result = self.engine.leave_shop()
@@ -222,6 +232,7 @@ class ShopScreen(Screen):
             for msg in result.messages:
                 log.add_message(msg)
             log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
+            self._refresh_status()
 
 
 class GameOverScreen(Screen):

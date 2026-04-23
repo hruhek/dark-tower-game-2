@@ -264,6 +264,19 @@ class TestShopScreen:
             assert pilot.app.engine.state.player.silver == 5  # ty: ignore[unresolved-attribute]  # 20 - 15 (Cloak price)
             assert pilot.app.engine.state.player.cloak_charges > 0
 
+    async def test_shop_shows_status_bar(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.engine.state.phase = Phase.SHOP
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))
+            await pilot.pause()
+            from dark_fort.tui.widgets import StatusBar
+            status_bar = pilot.app.screen.query_one(StatusBar)
+            assert status_bar is not None
+            assert status_bar.player is not None
+
 
 class TestGameOverScreen:
     async def test_death_screen_shows_fallen_message(self):
