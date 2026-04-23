@@ -151,9 +151,16 @@ class GameScreen(Screen):
             return
 
         action = button_id.replace("cmd-", "")
+        command = Command(action)
+        if command == Command.USE_ITEM:
+            self.selecting_item = True
+            self._log_messages(format_inventory(self.engine.state))
+            self._log_messages(["Use item: (type item number)"])
+            return
+
         result = self._handle_command(action)
         if result:
-            if Command(action) == Command.INVENTORY:
+            if command == Command.INVENTORY:
                 self._log_messages(format_inventory(self.engine.state))
             else:
                 self._log_messages(result.messages)

@@ -164,6 +164,7 @@ class TestGameScreenActions:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()
             pilot.app.engine.state.player.inventory.append(
                 Potion(name="Potion", heal="d6")
             )
@@ -185,6 +186,7 @@ class TestGameScreenActions:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
+            pilot.app.engine.state.player.inventory.clear()
             pilot.app.engine.state.player.inventory.append(
                 Potion(name="Potion", heal="d6")
             )

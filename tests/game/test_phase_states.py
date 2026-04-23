@@ -102,7 +102,7 @@ class TestCombatPhaseState:
         state = CombatPhaseState()
         result = state.handle_command(engine, Command.USE_ITEM)
         assert result is not None
-        assert "Use item" in result.messages[0]
+        assert result.messages == []  # Empty; UI handles prompt
 
     def test_handle_unknown_returns_none(self):
         engine = GameEngine()
