@@ -1,5 +1,6 @@
 from textual.app import ComposeResult
 from textual.containers import Horizontal
+from textual.content import Content
 from textual.reactive import reactive
 from textual.widgets import Button, Label, RichLog
 
@@ -92,12 +93,12 @@ class CommandBar(Horizontal):
         self.commands = commands or []
 
     @staticmethod
-    def _format_button_label(cmd: Command) -> str:
+    def _format_button_label(cmd: Command) -> Content:
         """Format button label with shortcut hint: [A]ttack"""
         name = cmd.value.replace("_", " ").title()
         if name:
-            return f"[[{name[0]}]]{name[1:]}"
-        return name
+            return Content(f"[{name[0]}]{name[1:]}")
+        return Content(name)
 
     def compose(self) -> ComposeResult:
         for cmd in self.commands:

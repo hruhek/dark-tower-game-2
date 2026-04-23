@@ -4,7 +4,6 @@ from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.screens import ShopScreen
 from dark_fort.tui.widgets import CommandBar
-from textual.widgets import Static
 
 
 class TestTitleScreen:
@@ -164,61 +163,67 @@ class TestGameScreenActions:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            pilot.app.engine.state.player.inventory.clear()
-            pilot.app.engine.state.player.inventory.append(
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
                 Potion(name="Potion", heal="d6")
             )
-            pilot.app.engine.state.combat = CombatState(
-                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
-                monster_hp=5
+            pilot.app.engine.state.combat = CombatState(  # ty: ignore[unresolved-attribute]
+                monster=Monster(
+                    name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+                ),
+                monster_hp=5,
             )
-            pilot.app.engine.state.phase = Phase.COMBAT
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
             await pilot.pause()
-            pilot.app.screen._update_commands()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             log = pilot.app.screen.query_one("#log")
-            before_count = log.message_count
+            before_count = log.message_count  # ty: ignore[unresolved-attribute]
             await pilot.press("u")
             await pilot.pause()
-            assert log.message_count > before_count
+            assert log.message_count > before_count  # ty: ignore[unresolved-attribute]
 
     async def test_digit_key_uses_item(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            pilot.app.engine.state.player.inventory.clear()
-            pilot.app.engine.state.player.inventory.append(
+            pilot.app.engine.state.player.inventory.clear()  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.player.inventory.append(  # ty: ignore[unresolved-attribute]
                 Potion(name="Potion", heal="d6")
             )
-            pilot.app.engine.state.player.hp = 5
-            pilot.app.engine.state.combat = CombatState(
-                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
-                monster_hp=5
+            pilot.app.engine.state.player.hp = 5  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.combat = CombatState(  # ty: ignore[unresolved-attribute]
+                monster=Monster(
+                    name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+                ),
+                monster_hp=5,
             )
-            pilot.app.engine.state.phase = Phase.COMBAT
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
             await pilot.pause()
-            pilot.app.screen._update_commands()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             await pilot.press("u")  # Enter item selection mode
             await pilot.pause()
             await pilot.press("1")  # Use first item
             await pilot.pause()
-            assert pilot.app.engine.state.player.hp > 5  # Potion healed
+            assert pilot.app.engine.state.player.hp > 5  # ty: ignore[unresolved-attribute]  # Potion healed
 
     async def test_button_labels_show_shortcuts(self):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            pilot.app.engine.state.combat = CombatState(
-                monster=Monster(name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5),
-                monster_hp=5
+            pilot.app.engine.state.combat = CombatState(  # ty: ignore[unresolved-attribute]
+                monster=Monster(
+                    name="Goblin", tier=MonsterTier.WEAK, points=3, damage="d4", hp=5
+                ),
+                monster_hp=5,
             )
-            pilot.app.engine.state.phase = Phase.COMBAT
+            pilot.app.engine.state.phase = Phase.COMBAT  # ty: ignore[unresolved-attribute]
             await pilot.pause()
-            pilot.app.screen._update_commands()
+            pilot.app.screen._update_commands()  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             attack_button = pilot.app.screen.query_one("#cmd-attack")
-            assert "[[A]]ttack" in attack_button.label.plain
+            assert "[A]ttack" in attack_button.label.plain  # ty: ignore[unresolved-attribute]
 
 
 class TestShopScreen:
@@ -278,11 +283,12 @@ class TestShopScreen:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            pilot.app.engine.state.phase = Phase.SHOP
-            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)
-            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))
+            pilot.app.engine.state.phase = Phase.SHOP  # ty: ignore[unresolved-attribute]
+            pilot.app.engine.state.shop_wares = list(SHOP_ITEMS)  # ty: ignore[unresolved-attribute]
+            pilot.app.push_screen(ShopScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             from dark_fort.tui.widgets import StatusBar
+
             status_bar = pilot.app.screen.query_one(StatusBar)
             assert status_bar is not None
             assert status_bar.player is not None
@@ -333,8 +339,8 @@ class TestGameOverScreen:
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
-            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine))
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine))  # ty: ignore[unresolved-attribute]
             await pilot.pause()
             # Check that quit binding exists
-            bindings = [b[0] for b in pilot.app.screen.BINDINGS]
+            bindings = [b[0] for b in pilot.app.screen.BINDINGS]  # ty: ignore
             assert "ctrl+q" in bindings
