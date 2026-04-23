@@ -277,7 +277,12 @@ class TestShopScreen:
             await pilot.press("0")
             await pilot.pause()
             assert pilot.app.engine.state.player.silver == 5  # ty: ignore[unresolved-attribute]  # 20 - 15 (Cloak price)
-            assert pilot.app.engine.state.player.cloak_charges > 0
+            cloak = next(
+                item
+                for item in pilot.app.engine.state.player.inventory
+                if item.type.name == "CLOAK"
+            )
+            assert cloak.charges > 0
 
     async def test_shop_shows_status_bar(self):
         async with DarkFortApp().run_test() as pilot:

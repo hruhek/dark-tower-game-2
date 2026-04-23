@@ -59,8 +59,8 @@ class GameEngine:
             case Potion() | Scroll():
                 self.state.player.inventory.append(item)
             case Cloak():
-                # TODO: Cloak charges should be on Cloak, not on player.
-                self.state.player.cloak_charges = roll("d4")
+                self.state.player.inventory.append(item)
+                item.charges = roll("d4")
 
         entrance = self._generate_room(is_entrance=True)
         self.state.current_room = entrance
@@ -184,8 +184,12 @@ class GameEngine:
                     msg = f"You buy {armor.name} for {price}s."
                 self.state.player.armor = armor  # ty: ignore[invalid-assignment]
             case EquipSlot.SPECIAL:
-                self.state.player.cloak_charges = roll("d4")
-                msg = f"You buy {item.name} for {price}s ({self.state.player.cloak_charges} charges)."
+                if isinstance(item, Cloak):
+                    self.state.player.inventory.append(item)
+                    item.charges = roll("d4")
+                    msg = f"You buy {item.name} for {price}s ({item.charges} charges)."
+                else:
+                    msg = f"You buy {item.name} for {price}s."
             case EquipSlot.NONE:
                 if isinstance(item, Scroll):
                     from dark_fort.game.tables import SCROLLS_TABLE

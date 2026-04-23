@@ -104,15 +104,15 @@ class Rope(Item):
 class Cloak(Item):
     type: Literal[ItemType.CLOAK] = ItemType.CLOAK
     equip_slot: EquipSlot = EquipSlot.SPECIAL
+    charges: int = 0
 
     def display_stats(self) -> str:
         return ""
 
     def use(self, state: GameState, index: int) -> ActionResult:
-        player = state.player
-        player.cloak_charges = max(0, player.cloak_charges - 1)
+        self.charges = max(0, self.charges - 1)
         return ActionResult(
-            messages=[f"Cloak activated. {player.cloak_charges} charges remaining."]
+            messages=[f"Cloak activated. {self.charges} charges remaining."]
         )
 
 
@@ -151,7 +151,6 @@ class Player(BaseModel):
     weapon: Weapon | None = None
     armor: Armor | None = None
     inventory: list[AnyItem] = Field(default_factory=list)
-    cloak_charges: int = 0
     attack_bonus: int = 0
     level_benefits: list[int] = Field(default_factory=list)
     daemon_fights_remaining: int = 0
