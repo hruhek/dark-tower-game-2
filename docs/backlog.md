@@ -16,6 +16,7 @@
 
 # use item from inventory
 - [ ] player should be able to use item from inventory during exploration phase
+- [ ] player should be able to exit inventory or use item screen
 
 # exit the dungeon for level up
 - [ ] when player has enough points (15) and explored rooms (12), add option to exit dungeon and level up
@@ -43,3 +44,5 @@
 
 # wandering the dungeon
 - [ ] player will be able to wander around the dungeon
+
+
