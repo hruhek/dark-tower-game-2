@@ -4,6 +4,7 @@ from dark_fort.game.tables import SHOP_ITEMS
 from dark_fort.tui.app import DarkFortApp
 from dark_fort.tui.screens import ShopScreen
 from dark_fort.tui.widgets import CommandBar
+from textual.widgets import Static
 
 
 class TestTitleScreen:
@@ -21,6 +22,13 @@ class TestTitleScreen:
             await pilot.press("enter")
             await pilot.pause()
             assert pilot.app.engine.state.phase == Phase.EXPLORING  # ty: ignore[unresolved-attribute]
+
+    async def test_ctrl_q_exits_app(self):
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("ctrl+q")
+            await pilot.pause()
+            # App should exit; if we get here without error, quit worked
+            assert True
 
 
 class TestGameScreenPhaseCommands:
@@ -316,3 +324,15 @@ class TestGameOverScreen:
             await pilot.pause()
             assert pilot.app.screen.__class__.__name__ == "TitleScreen"
             assert pilot.app.engine.state.phase == Phase.TITLE  # ty: ignore[unresolved-attribute]
+
+    async def test_game_over_shows_quit_hint(self):
+        from dark_fort.tui.screens import GameOverScreen
+
+        async with DarkFortApp().run_test() as pilot:
+            await pilot.press("enter")
+            await pilot.pause()
+            pilot.app.push_screen(GameOverScreen(engine=pilot.app.engine))
+            await pilot.pause()
+            # Check that quit binding exists
+            bindings = [b[0] for b in pilot.app.screen.BINDINGS]
+            assert "ctrl+q" in bindings

@@ -19,7 +19,10 @@ if TYPE_CHECKING:
 class TitleScreen(Screen):
     """Title screen with centered text and ENTER to start."""
 
-    BINDINGS = [("enter", "start", "Start Game")]
+    BINDINGS = [
+        ("enter", "start", "Start Game"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     @property
     def game_app(self) -> "DarkFortApp":
@@ -29,6 +32,7 @@ class TitleScreen(Screen):
         yield Static("DARK FORT", classes="title-header")
         yield Static("A delve into the catacombs", classes="title-subtitle")
         yield Static("Press ENTER to begin", classes="title-footer")
+        yield Static("Press CTRL+Q to quit", classes="title-footer")
 
     def action_start(self) -> None:
         result = self.game_app.engine.start_game()
@@ -40,6 +44,8 @@ class TitleScreen(Screen):
 
 class GameScreen(Screen):
     """Main gameplay screen with log, status bar, and command bar."""
+
+    BINDINGS = [("ctrl+q", "quit", "Quit")]
 
     selecting_item: reactive[bool] = reactive(False)
     KEY_MAP: dict[str, Command] = {
@@ -179,7 +185,10 @@ class GameScreen(Screen):
 class ShopScreen(Screen):
     """Void Peddler shop screen."""
 
-    BINDINGS = [("l", "leave", "Leave Shop")]
+    BINDINGS = [
+        ("l", "leave", "Leave Shop"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     def __init__(self, engine: GameEngine) -> None:
         super().__init__()
@@ -238,7 +247,10 @@ class ShopScreen(Screen):
 class GameOverScreen(Screen):
     """Game over / victory screen."""
 
-    BINDINGS = [("enter", "restart", "Try Again")]
+    BINDINGS = [
+        ("enter", "restart", "Try Again"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     @property
     def game_app(self) -> "DarkFortApp":
@@ -262,6 +274,7 @@ class GameOverScreen(Screen):
         yield Static(f"Points gathered: {player.points}/15", classes="game-over-stats")
         yield Static(f"Silver: {player.silver}", classes="game-over-stats")
         yield Static("Press ENTER to try again", classes="game-over-footer")
+        yield Static("Press CTRL+Q to quit", classes="game-over-footer")
 
     def action_restart(self) -> None:
         self.game_app.engine = GameEngine()
