@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
+from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Button, Header, Static
 
@@ -18,7 +19,10 @@ if TYPE_CHECKING:
 class TitleScreen(Screen):
     """Title screen with centered text and ENTER to start."""
 
-    BINDINGS = [("enter", "start", "Start Game")]
+    BINDINGS = [
+        ("enter", "start", "Start Game"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     @property
     def game_app(self) -> "DarkFortApp":
@@ -28,6 +32,7 @@ class TitleScreen(Screen):
         yield Static("DARK FORT", classes="title-header")
         yield Static("A delve into the catacombs", classes="title-subtitle")
         yield Static("Press ENTER to begin", classes="title-footer")
+        yield Static("Press CTRL+Q to quit", classes="title-footer")
 
     def action_start(self) -> None:
         result = self.game_app.engine.start_game()
@@ -39,6 +44,19 @@ class TitleScreen(Screen):
 
 class GameScreen(Screen):
     """Main gameplay screen with log, status bar, and command bar."""
+
+    BINDINGS = [("ctrl+q", "quit", "Quit")]
+
+    selecting_item: reactive[bool] = reactive(False)
+    KEY_MAP: dict[str, Command] = {
+        "e": Command.EXPLORE,
+        "i": Command.INVENTORY,
+        "a": Command.ATTACK,
+        "f": Command.FLEE,
+        "u": Command.USE_ITEM,
+        "b": Command.BROWSE,
+        "l": Command.LEAVE,
+    }
 
     def __init__(
         self, engine: GameEngine, initial_messages: list[str] | None = None
@@ -79,21 +97,77 @@ class GameScreen(Screen):
         for msg in messages:
             log.add_message(msg)
 
+    def _refresh_status(self) -> None:
+        """Force StatusBar refresh by reassigning reactive properties."""
+        status_bar = self.query_one(StatusBar)
+        status_bar.player = self.engine.state.player
+        status_bar.explored = self.engine.explored_count
+
+    def on_key(self, event) -> None:
+        # Handle item selection mode (digit keys)
+        if self.selecting_item:
+            if event.character and event.character.isdigit():
+                digit = int(event.character)
+                index = digit - 1 if digit != 0 else 9
+                inventory = self.engine.state.player.inventory
+                if 0 <= index < len(inventory):
+                    result = self.engine.use_item(index)
+                    self._log_messages(result.messages)
+                    self.selecting_item = False
+                    if result.phase:
+                        self._handle_phase_change(result)
+                    self._update_commands()
+                    self._refresh_status()
+                else:
+                    self._log_messages(["Invalid item number."])
+            return
+
+        # Handle command shortcuts
+        if event.character and event.character.lower() in self.KEY_MAP:
+            key = event.character.lower()
+            command = self.KEY_MAP[key]
+            phase = self.engine.state.phase
+            state = PHASE_STATES.get(phase)
+            if state and command in state.available_commands:
+                if command == Command.USE_ITEM:
+                    self.selecting_item = True
+                    self._log_messages(format_inventory(self.engine.state))
+                    self._log_messages(["Use item: (type item number)"])
+                else:
+                    result = self._handle_command(command.value)
+                    if result:
+                        if command == Command.INVENTORY:
+                            self._log_messages(format_inventory(self.engine.state))
+                        else:
+                            self._log_messages(result.messages)
+                        if result.phase:
+                            self._handle_phase_change(result)
+                        self._update_commands()
+                        self._refresh_status()
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id or ""
         if not button_id.startswith("cmd-"):
             return
 
         action = button_id.replace("cmd-", "")
+        command = Command(action)
+        if command == Command.USE_ITEM:
+            self.selecting_item = True
+            self._log_messages(format_inventory(self.engine.state))
+            self._log_messages(["Use item: (type item number)"])
+            return
+
         result = self._handle_command(action)
         if result:
-            if Command(action) == Command.INVENTORY:
+            if command == Command.INVENTORY:
                 self._log_messages(format_inventory(self.engine.state))
             else:
                 self._log_messages(result.messages)
             if result.phase:
                 self._handle_phase_change(result)
             self._update_commands()
+            self._refresh_status()
 
     def _handle_command(self, action: str) -> ActionResult | None:
         phase = self.engine.state.phase
@@ -103,6 +177,7 @@ class GameScreen(Screen):
         return None
 
     def _handle_phase_change(self, result: ActionResult) -> None:
+        self.selecting_item = False
         if result.phase == Phase.GAME_OVER:
             self.dismiss()
             self.app.push_screen(GameOverScreen(engine=self.engine))
@@ -117,7 +192,10 @@ class GameScreen(Screen):
 class ShopScreen(Screen):
     """Void Peddler shop screen."""
 
-    BINDINGS = [("l", "leave", "Leave Shop")]
+    BINDINGS = [
+        ("l", "leave", "Leave Shop"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     def __init__(self, engine: GameEngine) -> None:
         super().__init__()
@@ -125,6 +203,10 @@ class ShopScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
+        yield StatusBar(
+            player=self.engine.state.player,
+            explored=self.engine.explored_count,
+        )
         yield Static("The Void Peddler", classes="title-header")
         log = LogView(id="shop-log")
         log.can_focus = False
@@ -136,6 +218,12 @@ class ShopScreen(Screen):
         for line in format_shop_wares(self.engine.state):
             log.add_message(line)
         self.focus()
+
+    def _refresh_status(self) -> None:
+        """Update StatusBar with current state."""
+        status_bar = self.query_one(StatusBar)
+        status_bar.player = self.engine.state.player
+        status_bar.explored = self.engine.explored_count
 
     def action_leave(self) -> None:
         result = self.engine.leave_shop()
@@ -160,12 +248,16 @@ class ShopScreen(Screen):
             for msg in result.messages:
                 log.add_message(msg)
             log.add_message(f"\nYour silver: {self.engine.state.player.silver}s")
+            self._refresh_status()
 
 
 class GameOverScreen(Screen):
     """Game over / victory screen."""
 
-    BINDINGS = [("enter", "restart", "Try Again")]
+    BINDINGS = [
+        ("enter", "restart", "Try Again"),
+        ("ctrl+q", "quit", "Quit"),
+    ]
 
     @property
     def game_app(self) -> "DarkFortApp":
@@ -189,6 +281,7 @@ class GameOverScreen(Screen):
         yield Static(f"Points gathered: {player.points}/15", classes="game-over-stats")
         yield Static(f"Silver: {player.silver}", classes="game-over-stats")
         yield Static("Press ENTER to try again", classes="game-over-footer")
+        yield Static("Press CTRL+Q to quit", classes="game-over-footer")
 
     def action_restart(self) -> None:
         self.game_app.engine = GameEngine()

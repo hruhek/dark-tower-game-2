@@ -51,7 +51,8 @@ class CombatPhaseState(PhaseState):
         if action == Command.FLEE:
             return engine.flee()
         if action == Command.USE_ITEM:
-            return ActionResult(messages=["Use item: (type item number)"])
+            # Return empty result; GameScreen handles inventory display
+            return ActionResult(messages=[])
         return None
 
 
