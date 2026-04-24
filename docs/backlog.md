@@ -44,3 +44,6 @@
 
 # combat
 - [ ] some monsters have special attack that kill player (ex. medusa gaze). when that happens players should get to 0 HP and die
+
+# unified exit button/shortcut
+- [ ] leaving inventory screen or shop should have same shortcut/button
