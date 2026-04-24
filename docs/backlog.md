@@ -18,9 +18,6 @@
 - [ ] player should be able to use item from inventory during exploration phase
 - [ ] player should be able to exit inventory or use item screen
 
-# exit the dungeon for level up
-- [ ] when player has enough points (15) and explored rooms (12), add option to exit dungeon and level up
-
 # room exits
 - [ ] each room has exits (doors), player should be able to choose which exit he'll use
 
@@ -30,6 +27,14 @@
 # exit dungeon from entrance room
 - [ ] ENTRANCE ROOM should have "Exit Dungeon" option
 - [ ] to leave dungeon and level up, player needs to return to ENTRANCE ROOM
+- [ ] if user has enough gold when he exists dungeon add option to give gold away for level up
+
+# exit the dungeon for level up
+- [ ] when player has enough points (15) and explored rooms (12), add message to exit dungeon and level up in ENTRANCE ROOM
+
+# leveling up
+- [ ] check that each level up option can be used only one
+- [ ] apply level up benefits to player character
 
 # save/load
 - [ ] add save/load game feature
@@ -40,7 +45,11 @@
 - [ ] shop stock will reset for each new encounter
 
 # dungeon generation
-- [ ] dungeon will need to be generated on start of the game, and have minimal number of rooms
+- [ ] dungeon will need to be generated on start of the game
+- [ ] after the player exists the first dungeon, the second dungeon should be generated
+- [ ] if there are multiple dungeons, player should have option to choose which one to enter
+- [ ] each dungeon should have unique name
+- [ ] if dungeon has all rooms explored, it should have explored added to it's name
 
 # wandering the dungeon
 - [ ] player will be able to wander around the dungeon
