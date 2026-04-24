@@ -241,6 +241,46 @@ class TestSaveLoad:
         assert next_room.id == len(engine.state.rooms)
 
 
+class TestUseItem:
+    def test_use_scroll_consumes_it(self):
+        from dark_fort.game.enums import ScrollType
+        from dark_fort.game.models import Scroll
+
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(
+            Scroll(name="Scroll of Fire", scroll_type=ScrollType.SUMMON_DAEMON)
+        )
+        result = engine.use_item(0)
+        assert len(engine.state.player.inventory) == 0
+        assert any("unroll" in m.lower() for m in result.messages)
+
+    def test_use_rope_returns_empty_messages(self):
+        from dark_fort.game.models import Rope
+
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        engine.state.player.inventory.append(Rope(name="Rope"))
+        result = engine.use_item(0)
+        assert result.messages == []
+        assert len(engine.state.player.inventory) == 1
+
+    def test_use_cloak_consumes_charge(self):
+        from dark_fort.game.models import Cloak
+
+        engine = GameEngine()
+        engine.start_game()
+        engine.state.player.inventory.clear()
+        cloak = Cloak(name="Cloak of invisibility", charges=3)
+        engine.state.player.inventory.append(cloak)
+        result = engine.use_item(0)
+        assert cloak.charges == 2
+        assert any("Cloak activated" in m for m in result.messages)
+        assert len(engine.state.player.inventory) == 1
+
+
 class TestShopWares:
     def test_shop_wares_populated_on_shop_event(self):
         engine = GameEngine()
