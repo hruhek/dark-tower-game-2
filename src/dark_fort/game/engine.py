@@ -12,7 +12,6 @@ from dark_fort.game.models import (
     CombatState,
     GameState,
     Potion,
-    Room,
     Rope,
     Scroll,
 )
@@ -53,7 +52,7 @@ class GameEngine:
         return sum(1 for r in self.state.rooms.values() if r.explored)
 
     def start_game(self) -> ActionResult:
-        """Generate entrance room and starting equipment."""
+        """Generate dungeon upfront and starting equipment."""
         self.state = GameState(phase=Phase.ENTRANCE)
         self._dungeon = DungeonBuilder()
 
@@ -70,9 +69,13 @@ class GameEngine:
                 self.state.player.inventory.append(item)
                 item.charges = roll("d4")
 
-        entrance = self._generate_room(is_entrance=True)
+        # Build dungeon upfront
+        rooms = self._dungeon.build_dungeon()
+        for room in rooms:
+            self.state.rooms[room.id] = room
+
+        entrance = rooms[0]
         self.state.current_room = entrance
-        self.state.rooms[entrance.id] = entrance
 
         messages = [
             f"Your name is {self.state.player.name}.",
@@ -124,40 +127,74 @@ class GameEngine:
 
         if self.state.phase == Phase.ENTRANCE:
             self.state.phase = Phase.EXPLORING
+
+        # Add exit info to messages
+        if self.state.current_room:
+            exit_info = self.get_room_exits()
+            messages.extend(exit_info)
+
         return ActionResult(messages=messages, phase=self.state.phase)
 
-    def enter_new_room(self) -> ActionResult:
-        """Move to a new room through an unexplored door."""
-        room = self._generate_room()
+    def move_to_room(self, room_id: int) -> ActionResult:
+        """Move to an existing room through an exit."""
+        room = self.state.rooms.get(room_id)
+        if not room:
+            return ActionResult(messages=["That exit leads nowhere."])
+
         self.state.current_room = room
-        self.state.rooms[room.id] = room
 
         messages = [
-            f"You enter a {room.shape.lower()} room with {room.doors} door(s).",
+            f"You enter a {room.shape.lower()} room.",
         ]
 
-        room_result_idx = roll("d6") - 1
-        room_result = ROOM_RESULTS[room_result_idx]
+        if not room.explored and room.result == "pending":
+            room_result_idx = roll("d6") - 1
+            room_result = ROOM_RESULTS[room_result_idx]
 
-        result = resolve_room_event(room_result, self.state.player)
-        messages.extend(result.messages)
+            result = resolve_room_event(room_result, self.state.player)
+            messages.extend(result.messages)
 
-        if result.combat:
-            self.state.combat = result.combat
-        if result.explored and self.state.current_room:
-            self.state.current_room.explored = True
-        if result.silver_delta:
-            self.state.player.silver += result.silver_delta
-        if result.hp_delta:
-            self.state.player.hp += result.hp_delta
+            if result.combat:
+                self.state.combat = result.combat
+            if result.explored:
+                room.explored = True
+            if result.silver_delta:
+                self.state.player.silver += result.silver_delta
+            if result.hp_delta:
+                self.state.player.hp += result.hp_delta
 
-        final_phase = result.phase or Phase.EXPLORING
-        self.state.phase = final_phase
+            final_phase = result.phase or Phase.EXPLORING
+            self.state.phase = final_phase
 
-        if final_phase == Phase.SHOP:
-            self.state.shop_wares = list(SHOP_ITEMS)
+            if final_phase == Phase.SHOP:
+                self.state.shop_wares = list(SHOP_ITEMS)
+        else:
+            # Room already explored — no re-roll for now
+            # TODO: 1-in-4 weak monster check — next backlog item
+            room.explored = True
 
-        return ActionResult(messages=messages, phase=final_phase)
+        exit_info = self.get_room_exits()
+        messages.extend(exit_info)
+
+        return ActionResult(messages=messages, phase=self.state.phase)
+
+    def get_room_exits(self) -> list[str]:
+        """Return formatted exit descriptions for the current room."""
+        if not self.state.current_room:
+            return []
+
+        room = self.state.current_room
+        lines: list[str] = []
+        for exit in room.exits:
+            dest = self.state.rooms.get(exit.destination)
+            if dest and dest.explored:
+                status = f"Explored ({dest.shape})"
+            else:
+                status = "Unexplored"
+            lines.append(
+                f"  {exit.door_number}. {exit.direction.capitalize()} → {status}"
+            )
+        return lines
 
     def attack(self, player_roll: int | None = None) -> ActionResult:
         """Attack the current monster."""
@@ -318,7 +355,3 @@ class GameEngine:
         engine._dungeon = DungeonBuilder()
         engine._dungeon._counter = data["room_counter"]
         return engine
-
-    def _generate_room(self, is_entrance: bool = False) -> Room:
-        """Generate a new room via DungeonBuilder."""
-        return self._dungeon.build_room(is_entrance=is_entrance)
