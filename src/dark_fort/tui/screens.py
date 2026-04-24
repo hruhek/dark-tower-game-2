@@ -134,6 +134,11 @@ class GameScreen(Screen):
             digit = int(event.character)
             current = self.engine.state.current_room
             if current:
+                # Dungeon exit from entrance room
+                if digit == 0 and current.id == 0:
+                    result = self.engine.exit_dungeon()
+                    self._log_messages(result.messages)
+                    return
                 for exit in current.exits:
                     if exit.door_number == digit:
                         result = self.engine.move_to_room(exit.destination)

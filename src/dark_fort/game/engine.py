@@ -194,7 +194,21 @@ class GameEngine:
             lines.append(
                 f"  {exit.door_number}. {exit.direction.capitalize()} → {status}"
             )
+        # Entrance room always has a dungeon exit
+        if room.id == 0:
+            lines.append("  0. Exit Dungeon")
         return lines
+
+    def exit_dungeon(self) -> ActionResult:
+        """Exit the dungeon from the entrance room."""
+        if not self.state.current_room or self.state.current_room.id != 0:
+            return ActionResult(messages=["You can only exit from the entrance room."])
+        # TODO: level up check, generate next dungeon — future backlog items
+        return ActionResult(
+            messages=[
+                "You leave the Dark Fort. (Level up and next dungeon coming soon!)"
+            ]
+        )
 
     def attack(self, player_roll: int | None = None) -> ActionResult:
         """Attack the current monster."""
