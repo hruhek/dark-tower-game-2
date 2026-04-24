@@ -49,7 +49,6 @@ class GameScreen(Screen):
 
     selecting_item: reactive[bool] = reactive(False)
     KEY_MAP: dict[str, Command] = {
-        "e": Command.EXPLORE,
         "i": Command.INVENTORY,
         "a": Command.ATTACK,
         "f": Command.FLEE,
@@ -124,6 +123,27 @@ class GameScreen(Screen):
                     self._refresh_status()
                 else:
                     self._log_messages(["Invalid item number."])
+            return
+
+        # Handle exit selection in exploring phase
+        if (
+            self.engine.state.phase == Phase.EXPLORING
+            and event.character
+            and event.character.isdigit()
+        ):
+            digit = int(event.character)
+            current = self.engine.state.current_room
+            if current:
+                for exit in current.exits:
+                    if exit.door_number == digit:
+                        result = self.engine.move_to_room(exit.destination)
+                        self._log_messages(result.messages)
+                        if result.phase:
+                            self._handle_phase_change(result)
+                        self._update_commands()
+                        self._refresh_status()
+                        return
+                self._log_messages([f"No exit number {digit}."])
             return
 
         # Handle command shortcuts
