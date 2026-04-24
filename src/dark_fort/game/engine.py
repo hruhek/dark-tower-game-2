@@ -147,6 +147,10 @@ class GameEngine:
             f"You enter a {room.shape.lower()} room.",
         ]
 
+        # Show exits before encounter so player knows their options
+        exit_info = self.get_room_exits()
+        messages.extend(exit_info)
+
         if not room.explored and room.result == "pending":
             room_result_idx = roll("d6") - 1
             room_result = ROOM_RESULTS[room_result_idx]
@@ -172,9 +176,6 @@ class GameEngine:
             # Room already explored — no re-roll for now
             # TODO: 1-in-4 weak monster check — next backlog item
             room.explored = True
-
-        exit_info = self.get_room_exits()
-        messages.extend(exit_info)
 
         return ActionResult(messages=messages, phase=self.state.phase)
 
