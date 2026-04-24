@@ -27,13 +27,14 @@ class PhaseState(ABC):
 
 class ExploringPhaseState(PhaseState):
     phase = Phase.EXPLORING
-    available_commands = [Command.EXPLORE, Command.INVENTORY]
+    available_commands = [Command.MOVE, Command.INVENTORY]
 
     def handle_command(
         self, engine: GameEngine, action: Command
     ) -> ActionResult | None:
-        if action == Command.EXPLORE:
-            return engine.enter_new_room()
+        if action == Command.MOVE:
+            # MOVE is handled by GameScreen with digit-key exit selection
+            return ActionResult(messages=[])
         if action == Command.INVENTORY:
             return ActionResult(messages=[])
         return None

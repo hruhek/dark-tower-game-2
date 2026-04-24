@@ -31,15 +31,15 @@ class TestExploringPhaseState:
 
     def test_available_commands(self):
         state = ExploringPhaseState()
-        assert state.available_commands == [Command.EXPLORE, Command.INVENTORY]
+        assert state.available_commands == [Command.MOVE, Command.INVENTORY]
 
-    def test_handle_explore_delegates_to_engine(self):
+    def test_handle_move_returns_empty(self):
         engine = GameEngine()
         engine.start_game()
         state = ExploringPhaseState()
-        result = state.handle_command(engine, Command.EXPLORE)
+        result = state.handle_command(engine, Command.MOVE)
         assert result is not None
-        assert result.messages
+        assert result.messages == []
 
     def test_handle_inventory_empty(self):
         engine = GameEngine()
@@ -66,7 +66,7 @@ class TestExploringPhaseState:
         engine = GameEngine()
         engine.start_game()
         state = ExploringPhaseState()
-        assert state.handle_command(engine, Command.MOVE) is None
+        assert state.handle_command(engine, Command.BUY) is None
 
 
 class TestCombatPhaseState:
