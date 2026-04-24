@@ -6,7 +6,6 @@ from dark_fort.game.dice import roll
 from dark_fort.game.models import Exit, Room
 from dark_fort.game.tables import get_room_shape
 
-
 DIRECTIONS = ["north", "south", "east", "west"]
 OPPOSITES = {"north": "south", "south": "north", "east": "west", "west": "east"}
 
@@ -78,16 +77,20 @@ class DungeonBuilder:
 
     def _connect(self, room_a: Room, room_b: Room, direction: str) -> None:
         """Create bidirectional exits between two rooms."""
-        room_a.exits.append(Exit(
-            door_number=len(room_a.exits) + 1,
-            destination=room_b.id,
-            direction=direction,
-        ))
-        room_b.exits.append(Exit(
-            door_number=len(room_b.exits) + 1,
-            destination=room_a.id,
-            direction=OPPOSITES[direction],
-        ))
+        room_a.exits.append(
+            Exit(
+                door_number=len(room_a.exits) + 1,
+                destination=room_b.id,
+                direction=direction,
+            )
+        )
+        room_b.exits.append(
+            Exit(
+                door_number=len(room_b.exits) + 1,
+                destination=room_a.id,
+                direction=OPPOSITES[direction],
+            )
+        )
 
     def _get_room_position(self, room_id: int) -> tuple[int, int]:
         for pos, rid in self._grid.items():

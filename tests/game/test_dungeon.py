@@ -47,16 +47,20 @@ class TestDungeonBuilder:
 
 def test_build_dungeon_creates_entrance():
     from dark_fort.game.dungeon import DungeonBuilder
+
     builder = DungeonBuilder()
     rooms = builder.build_dungeon()
     assert len(rooms) >= 1
     entrance = rooms[0]
     assert entrance.explored is True
-    assert len(entrance.exits) >= 1  # entrance always has at least 1 door (d4=1 is minimum)
+    assert (
+        len(entrance.exits) >= 1
+    )  # entrance always has at least 1 door (d4=1 is minimum)
 
 
 def test_build_dungeon_connectivity():
     from dark_fort.game.dungeon import DungeonBuilder
+
     builder = DungeonBuilder()
     rooms = builder.build_dungeon()
     for room in rooms:
@@ -67,6 +71,7 @@ def test_build_dungeon_connectivity():
 
 def test_build_dungeon_directions():
     from dark_fort.game.dungeon import DungeonBuilder
+
     builder = DungeonBuilder()
     rooms = builder.build_dungeon()
     for room in rooms:

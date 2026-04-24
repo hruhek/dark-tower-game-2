@@ -35,6 +35,7 @@ class TestGameEngine:
         assert len(current.exits) > 0
         next_id = current.exits[0].destination
         result = engine.move_to_room(next_id)
+        assert engine.state.current_room is not None
         assert engine.state.current_room.id == next_id
         assert result.messages
 
@@ -49,6 +50,7 @@ class TestGameEngine:
         engine = GameEngine()
         engine.start_game()
         current = engine.state.current_room
+        assert current is not None
         next_id = current.exits[0].destination
         next_room = engine.state.rooms[next_id]
         assert next_room.explored is False

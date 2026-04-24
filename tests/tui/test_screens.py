@@ -119,7 +119,7 @@ class TestGameScreenActions:
 
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    async def test_digit_key_moves_through_exit(
+    async def test_digit_key_button_moves_through_exit(
         self, _mock_engine_roll, _mock_rules_roll
     ):
         async with DarkFortApp().run_test() as pilot:
@@ -362,7 +362,9 @@ class TestGameScreenActions:
 
     @patch("dark_fort.game.rules.roll", return_value=1)
     @patch("dark_fort.game.engine.roll", return_value=4)
-    async def test_digit_key_moves_through_exit(self, _mock_engine_roll, _mock_rules_roll):
+    async def test_digit_key_moves_through_exit(
+        self, _mock_engine_roll, _mock_rules_roll
+    ):
         async with DarkFortApp().run_test() as pilot:
             await pilot.press("enter")
             await pilot.pause()
